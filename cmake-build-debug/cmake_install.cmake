@@ -1,4 +1,4 @@
-# Install script for directory: /Users/angelicahanley/CLionProjects/Project-3-DSA-Soflo-Gators
+# Install script for directory: /Users/mikaylacohen/CLionProjects/Project-3-DSA-Soflo-Gator
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -45,5 +45,5 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "/Users/angelicahanley/CLionProjects/Project-3-DSA-Soflo-Gators/cmake-build-debug/${CMAKE_INSTALL_MANIFEST}"
+file(WRITE "/Users/mikaylacohen/CLionProjects/Project-3-DSA-Soflo-Gator/cmake-build-debug/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")

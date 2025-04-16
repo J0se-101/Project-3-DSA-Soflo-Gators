@@ -42,14 +42,14 @@
 			"compileCommandFragments" : 
 			[
 				{
-					"fragment" : "-g -std=gnu++14 -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX15.2.sdk -fcolor-diagnostics"
+					"fragment" : "-g -std=gnu++14 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX14.4.sdk -fcolor-diagnostics"
 				}
 			],
 			"includes" : 
 			[
 				{
 					"backtrace" : 2,
-					"path" : "/Users/angelicahanley/CLionProjects/Project-3-DSA-Soflo-Gators/src"
+					"path" : "/Users/mikaylacohen/CLionProjects/Project-3-DSA-Soflo-Gator/src"
 				}
 			],
 			"language" : "CXX",

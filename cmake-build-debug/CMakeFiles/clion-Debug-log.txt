@@ -1,6 +1,6 @@
-/Applications/CLion.app/Contents/bin/cmake/mac/aarch64/bin/cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_MAKE_PROGRAM=/Applications/CLion.app/Contents/bin/ninja/mac/aarch64/ninja -G Ninja -S /Users/angelicahanley/CLionProjects/Project-3-DSA-Soflo-Gators -B /Users/angelicahanley/CLionProjects/Project-3-DSA-Soflo-Gators/cmake-build-debug
--- The C compiler identification is AppleClang 16.0.0.16000026
--- The CXX compiler identification is AppleClang 16.0.0.16000026
+/Applications/CLion.app/Contents/bin/cmake/mac/x64/bin/cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_MAKE_PROGRAM=/Applications/CLion.app/Contents/bin/ninja/mac/x64/ninja -G Ninja -S /Users/mikaylacohen/CLionProjects/Project-3-DSA-Soflo-Gator -B /Users/mikaylacohen/CLionProjects/Project-3-DSA-Soflo-Gator/cmake-build-debug
+-- The C compiler identification is AppleClang 15.0.0.15000309
+-- The CXX compiler identification is AppleClang 15.0.0.15000309
 -- Detecting C compiler ABI info
 -- Detecting C compiler ABI info - done
 -- Check for working C compiler: /Library/Developer/CommandLineTools/usr/bin/cc - skipped
@@ -11,6 +11,6 @@
 -- Check for working CXX compiler: /Library/Developer/CommandLineTools/usr/bin/c++ - skipped
 -- Detecting CXX compile features
 -- Detecting CXX compile features - done
--- Configuring done (0.9s)
+-- Configuring done (1.8s)
 -- Generating done (0.0s)
--- Build files have been written to: /Users/angelicahanley/CLionProjects/Project-3-DSA-Soflo-Gators/cmake-build-debug
+-- Build files have been written to: /Users/mikaylacohen/CLionProjects/Project-3-DSA-Soflo-Gator/cmake-build-debug
