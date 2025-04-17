@@ -1,3 +1,0 @@
-/Users/angelicahanley/CLionProjects/Project-3-DSA-Soflo-Gators/cmake-build-debug/CMakeFiles/Project_3_DSA_Soflo_Gators.dir
-/Users/angelicahanley/CLionProjects/Project-3-DSA-Soflo-Gators/cmake-build-debug/CMakeFiles/edit_cache.dir
-/Users/angelicahanley/CLionProjects/Project-3-DSA-Soflo-Gators/cmake-build-debug/CMakeFiles/rebuild_cache.dir
