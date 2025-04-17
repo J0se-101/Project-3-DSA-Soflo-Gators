@@ -51,6 +51,7 @@ int main(){
         // while(getline(ss,field,',')){
         //    fields.push_back(field);
         // }
+        //git hub loves us
         for (int i = 0; i < fields.size(); i++) {
             cout << i << ": " << fields[i] << endl;
         }
