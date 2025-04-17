@@ -1,0 +1,4 @@
+cmake-build-debug/
+CMakeCache.txt
+*.user
+*.idea/
