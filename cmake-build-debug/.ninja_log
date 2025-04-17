@@ -1,9 +1,3 @@
-# ninja log v6
-11	1701	1744837836402495418	CMakeFiles/Project_3_DSA_Soflo_Gators.dir/src/TVShow.cpp.o	20447c6a36c13321
-1706	1803	1744837838098254771	Project_3_DSA_Soflo_Gators	6987f7b40591dda
-18	2108	1744839073320264590	CMakeFiles/Project_3_DSA_Soflo_Gators.dir/src/TVShow.cpp.o	20447c6a36c13321
-2108	2385	1744839075409739390	Project_3_DSA_Soflo_Gators	6987f7b40591dda
-24	1994	1744839401238827794	CMakeFiles/Project_3_DSA_Soflo_Gators.dir/src/TVShow.cpp.o	20447c6a36c13321
-1994	2247	1744839403209241820	Project_3_DSA_Soflo_Gators	6987f7b40591dda
-19	1636	1744839454130378628	CMakeFiles/Project_3_DSA_Soflo_Gators.dir/src/TVShow.cpp.o	20447c6a36c13321
-1636	1723	1744839455747385552	Project_3_DSA_Soflo_Gators	6987f7b40591dda
+# ninja log v5
+0	591	1744861758305681271	CMakeFiles/Project_3_DSA_Soflo_Gators.dir/src/TVShow.cpp.o	e7acb9e6bd3daea9
+594	702	1744861758417790370	Project_3_DSA_Soflo_Gators	cf04ca80f51ea50
