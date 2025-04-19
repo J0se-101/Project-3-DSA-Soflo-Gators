@@ -243,9 +243,60 @@ void TVShow::findShow(string csvFile, string userinput) {
     //using .find function of a hash map to find a match for the inputted tv show!
     if(TVShowsMap.find(trimmedSearch)!=TVShowsMap.end()){
       TVShowsMap[trimmedSearch].print();
-    }else{
+    } else {
         cout << "Sorry! No titles match :( Please try again.\n";
     }
+}
+
+//if there are multiple genres/networks, this will seperate them
+vector<string> TVShow::splitstring(string s, char delimiter) {
+    vector<string> splitStrings;
+    stringstream ss(s);
+    string singleGenre;
+
+    while (getline(ss, singleGenre, delimiter)) {
+        splitStrings.push_back(trim(singleGenre));
+    }
+    return splitStrings;
+}
+
+
+unordered_map<string, vector<string>> TVShow::populateGenres(unordered_map<string, TVShow> TVShowsMap) {
+    unordered_map<string, vector<string>> similarGenres;
+    //key is the genre, vector is the vector of show titles
+    for (auto iter = TVShowsMap.begin(); iter != TVShowsMap.end(); iter++) {
+        string title = iter->first;
+        TVShow show = iter->second;
+
+        string genres = show.genres;
+        vector <string> splitGenres = splitstring(genres, ',');
+        //splitting the genres based on the delimiter ','
+        for (int i = 0; i < splitGenres.size(); i++) {
+            string genre = splitGenres[i];
+            //based on genre, add titles with same genre
+            similarGenres[genre].push_back(title);
+        }
+    }
+    return similarGenres;
+}
+
+unordered_map<string, vector<string>> TVShow::populateNetworks(unordered_map<string, TVShow> TVShowsMap) {
+    unordered_map<string, vector<string>> similarNetworks;
+    //key is the network, vector is the show titles
+    for (auto iter = TVShowsMap.begin(); iter != TVShowsMap.end(); iter++) {
+        string title = iter->first;
+        TVShow show = iter->second;
+
+        string networks = show.networks;
+        vector <string> splitNetworks = splitstring(networks, ',');
+        //splitting the networks based on the delimiter ','
+        for (int i = 0; i < splitNetworks.size(); i++) {
+            string network = splitNetworks[i];
+            //based on network, add titles with same network
+            similarNetworks[network].push_back(title);
+        }
+    }
+    return similarNetworks;
 }
 
 int main() {

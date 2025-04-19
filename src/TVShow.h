@@ -38,9 +38,15 @@ public:
 
     //finding exact show match based on title
     bool checkExactMatch(string trimmedSearch, bool& showFound);
-
+    unordered_map<string, vector<string>> populateGenres(unordered_map<string, TVShow> TVShowsMap);
+    unordered_map<string, vector<string>> populateNetworks(unordered_map<string, TVShow> TVShowsMap);
+    //helper function for networks and genres
+    vector<string> splitstring(string s, char delimiter);
 private:
-    unordered_map<string, TVShow>  TVShowsMap;
+    unordered_map<string, vector<string>> graph; //graph
+    unordered_map<string, TVShow>  TVShowsMap; //our hash table
+    unordered_map<string, vector<string>> genreMap; //genres
+    unordered_map<string, vector<string>> networkMap; //networks
 };
 
 
