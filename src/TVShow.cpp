@@ -299,6 +299,49 @@ unordered_map<string, vector<string>> TVShow::populateNetworks(unordered_map<str
     return similarNetworks;
 }
 
+//building the graph based on connection either between genre or network
+unordered_map<string, vector<string>> TVShow::graphBuilder(unordered_map<string, vector<string>> &genreMap,
+    unordered_map<string, vector<string>> &networkMap) {
+    //graph
+    unordered_map<string, vector<string>> buildGraph;
+    //looping thru genres
+    for (auto genreIter = genreMap.begin(); genreIter != genreMap.end(); genreIter++) {
+        //value is shows, key is genre
+        vector<string> shows = genreIter->second;
+        //connecting the shows that share same genres
+        for (int show1 = 0; show1 < shows.size(); show1++) {
+            for (int show2 = 0; show2 < shows.size(); show2++) {
+                //this is to prevent shows from linking to themselves
+                if (show1 != show2) {
+                    //if the show isn't the same, then add an edge!
+                    string showOne = shows[show1];
+                    string showTwo = shows[show2];
+                    buildGraph[showOne].push_back(showTwo);
+                }
+            }
+        }
+    }
+
+    //looping thru networks
+    for (auto networkIter = networkMap.begin(); networkIter != networkMap.end(); networkIter++) {
+        vector<string> shows = networkIter->second;
+        //value is shows, key is network
+        //connecting the shows that share same network
+        for (int show1 = 0; show1 < shows.size(); show1++) {
+            for (int show2 = 0; show2 < shows.size(); show2++) {
+                //don't want a show linking to itself
+                if (show1 != show2) {
+                    //if the show isn't the same, then add an edge!
+                    string showOne = shows[show1];
+                    string showTwo = shows[show2];
+                    buildGraph[showOne].push_back(showTwo);
+                }
+            }
+        }
+    }
+    return buildGraph;
+}
+
 int main() {
     TVShow userShow(" ", " ", " "," ");
     string search;
