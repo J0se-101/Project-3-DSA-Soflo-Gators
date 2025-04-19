@@ -10,6 +10,13 @@
 
 using namespace std;
 
+//default constructor
+TVShow::TVShow () {
+    name = "";
+    genres = "";
+    creators = "";
+    networks = "";
+}
 
 //constructor
 TVShow::TVShow (std::string name, std::string genres, std::string creators, string networks) {
@@ -45,6 +52,7 @@ bool TVShow::checkifMatch(std::string userSearch) {
     return false;
 }
 
+//Not used anymore, we used this before we had the hash map
 bool TVShow::checkExactMatch(string trimmedSearch, bool& showFound) {
     //converting title to lowercase so case won't matter for comparison
     string lowerCaseTitle = name; //name from class
@@ -196,44 +204,71 @@ void TVShow::findShow(string csvFile, string userinput) {
     transform(trimmedSearch.begin(), trimmedSearch.end(), trimmedSearch.begin(), ::tolower);
     //citation: geeksforgeeks
 
-    bool showFound = false;
-    while (true) {
-        vector<string> row = readRow(file);
-        if (row.empty()) {
-            break;
-        }
+    //not used, we used this before we had the hash map
+    //bool showFound = false;
 
-        //trimming the categories
-        string title = trim(row[colName]);
-        string genres = trim(row[colGenres]);
-        string creators = trim(row[colCreatedBy]);
-        string networks = trim(row[colNetworks]);
-
-        //this while statement is dealing with multiple creators and commas
-        while (row.size() > colCreatedBy+1) {
-            string followingCreator = trim(row[colCreatedBy+1]);
-            if (followingCreator.size() > 2 && !number(followingCreator)) {
-                creators += ", " + followingCreator; //add that creator
+    //only builds our master map once if it wasn't built previously
+    if(TVShowsMap.empty()) {
+        cout << "loading shows ...\n" << endl;
+        //reading each row from csv file
+        while (true) {
+            vector<string> row = readRow(file);
+            if (row.empty()) {
+                break;
             }
-            row.erase(row.begin()+colCreatedBy+1);
-        }
-        //tv show instance
-        TVShow myShow(title,genres,creators,networks);
-        //calls function to check for an exact match of that tv show title in our data set
-        myShow.checkExactMatch(trimmedSearch, showFound);
-    }
 
-    if (!showFound) {
-        cout << "Sorry! No titles match :( Please try again.";
+            //trimming the categories
+            string title = trim(row[colName]);
+            string genres = trim(row[colGenres]);
+            string creators = trim(row[colCreatedBy]);
+            string networks = trim(row[colNetworks]);
+
+            //this while statement is dealing with multiple creators and commas
+            while (row.size() > colCreatedBy + 1) {
+                string followingCreator = trim(row[colCreatedBy + 1]);
+                if (followingCreator.size() > 2 && !number(followingCreator)) {
+                    creators += ", " + followingCreator; //add that creator
+                }
+                row.erase(row.begin() + colCreatedBy + 1);
+            }
+
+            //making lowercase and tv show instance
+            string lowerCaseTitle = title;
+            transform(lowerCaseTitle.begin(), lowerCaseTitle.end(), lowerCaseTitle.begin(), ::tolower);
+            TVShow myShow(title, genres, creators, networks);
+            //adding tv show to the hash map
+            TVShowsMap[lowerCaseTitle] = myShow;
+        }
+    }
+    //using .find function of a hash map to find a match for the inputted tv show!
+    if(TVShowsMap.find(trimmedSearch)!=TVShowsMap.end()){
+      TVShowsMap[trimmedSearch].print();
+    }else{
+        cout << "Sorry! No titles match :( Please try again.\n";
     }
 }
 
 int main() {
-    cout << "Search for show title: " << endl;
-    string search;
-    getline(cin, search);
-
     TVShow userShow(" ", " ", " "," ");
-    userShow.findShow("../src/TMDB_tv_dataset_v3.csv", search);
+    string search;
+    cout << "Project 3 DSA: Soflo Gators!" << endl;
+    //add tv show graph connections code later
+    cout << "Type '1' for similar TV Show Recommendations based on ____!" << endl;
+
+    cout << "Type 'exit' to quit.\n" << endl;
+
+    while(true){
+        cout << "Search for show title: " << endl;
+        getline(cin, search);
+        //trimming search for exit to be identified when inputted
+        search = TVShow::trim(search);
+        string lowerCaseSearch = search;
+        transform(lowerCaseSearch.begin(), lowerCaseSearch.end(), lowerCaseSearch.begin(), ::tolower);
+        if(lowerCaseSearch == "exit"){
+            break;
+        }
+        userShow.findShow("../src/TMDB_tv_dataset_v3.csv", search);
+        cout << endl;
+    }
     return 0;
 }

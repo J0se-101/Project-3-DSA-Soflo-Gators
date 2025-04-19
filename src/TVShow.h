@@ -5,6 +5,7 @@
 #define TVSHOW_H
 #include <string>
 #include <vector>
+#include <unordered_map>
 using namespace std;
 
 class TVShow {
@@ -14,6 +15,8 @@ public:
     std:: string creators;
     string networks;
 
+    //default constructor
+    TVShow();
     //constructor
     TVShow(std::string name, std::string genres, std::string creators, string networks);
     //prints out the information
@@ -21,7 +24,7 @@ public:
     //searching for the name of show
     bool checkifMatch (std::string userSearch);
     //trimming whitespaces in user input
-    std::string trim (const std::string& s);
+    static std::string trim (const std::string& s);
     //this function was to hard code the 2750 out but its not working...
     bool number(const std::string& s);
     //reads the row
@@ -35,6 +38,9 @@ public:
 
     //finding exact show match based on title
     bool checkExactMatch(string trimmedSearch, bool& showFound);
+
+private:
+    unordered_map<string, TVShow>  TVShowsMap;
 };
 
 
