@@ -5,16 +5,17 @@
 #define TVSHOW_H
 #include <string>
 #include <vector>
-
+using namespace std;
 
 class TVShow {
 public:
     std::string name;
     std::string genres;
     std:: string creators;
+    string networks;
 
     //constructor
-    TVShow(std::string name, std::string genres, std::string creators);
+    TVShow(std::string name, std::string genres, std::string creators, string networks);
     //prints out the information
     void print();
     //searching for the name of show
@@ -31,6 +32,9 @@ public:
     std::vector<std::string> filterCol (std::vector<std::string> row, std::vector<int> index);
     //finding show
     void findShow(std::string csvFile, std::string userinput);
+
+    //finding exact show match based on title
+    bool checkExactMatch(string trimmedSearch, bool& showFound);
 };
 
 

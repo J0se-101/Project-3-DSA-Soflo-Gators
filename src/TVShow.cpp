@@ -12,21 +12,27 @@ using namespace std;
 
 
 //constructor
-TVShow::TVShow (std::string name, std::string genres, std::string creators) {
+TVShow::TVShow (std::string name, std::string genres, std::string creators, string networks) {
     this->name = name;
     this->genres = genres;
     this->creators = creators;
+    this->networks = networks;
 }
 
 //prints information
 void TVShow::print() {
     //prints out the information
-    std::cout << "TV SHOW INFORMATION:";
-    std::cout << "\nTITLE:" << name << std::endl;
-    std::cout <<"\nGENRES: " << genres << endl;
-    std::cout<< "\nCREATED BY:" << creators << std::endl;
+    std::cout << "TV SHOW INFORMATION"<<endl;
+    cout << "-------------------" << endl;
+    std::cout << "TITLE: " << name << std::endl;
+    std::cout <<"GENRES: " << genres << endl;
+    std::cout<< "CREATED BY: " << creators << std::endl;
+    cout<< "SHOW NETWORKS: " << networks << endl;
+    cout << "\n";
 }
 
+//Old function to check for a match (didn't do exact match so if you typed "game", game of thrones appeared)
+//Maybe can use for the genre matchings!
 bool TVShow::checkifMatch(std::string userSearch) {
     //searching for the name of show
     //lower case for sensitivity purposes
@@ -39,6 +45,18 @@ bool TVShow::checkifMatch(std::string userSearch) {
     return false;
 }
 
+bool TVShow::checkExactMatch(string trimmedSearch, bool& showFound) {
+    //converting title to lowercase so case won't matter for comparison
+    string lowerCaseTitle = name; //name from class
+    transform(lowerCaseTitle.begin(),lowerCaseTitle.end(),lowerCaseTitle.begin(),::tolower);
+    //does an exact match with lowerCaseTitle and the user input so ONLY full titles provide a match
+    //TVShow show(userInput, genres, creators);
+    if(lowerCaseTitle == trimmedSearch){
+        print();
+        showFound = true;
+    }
+    return showFound;
+}
 
 /* function purpose: so user can input their search multiple ways without
  a whitespace changing the result */
@@ -59,8 +77,6 @@ string TVShow::trim (const string& s) {
     //citation: cplusplus
     return s.substr(first, last - first + 1);
 }
-
-
 
 //checks if string is number, this was for a trailing number that kept appearing in output
 //not happening anymore but...
@@ -139,7 +155,7 @@ vector<string> TVShow::filterCol (vector<string> row, vector<int> index) {
 //finding show, printing show name, genre, and who it was created by
 void TVShow::findShow(string csvFile, string userinput) {
     ifstream file(csvFile);
-    if (!file) {
+    if (!file.is_open()) {
         cerr << "Error opening file " << csvFile << endl;
         return;
     }
@@ -150,6 +166,7 @@ void TVShow::findShow(string csvFile, string userinput) {
     int colName = -1;
     int colGenres = -1;
     int colCreatedBy = -1;
+    int colNetworks = -1;
 
     //assigning indices based on the csv column names
     for (int i = 0; i < header.size(); i++) {
@@ -164,10 +181,13 @@ void TVShow::findShow(string csvFile, string userinput) {
         if (header[i] == "created_by") {
             colCreatedBy = i;
         }
+        if (header[i] == "networks") {
+            colNetworks = i;
+        }
     }
 
-    if (colName <0 || colGenres < 0 || colCreatedBy < 0) {
-        cerr << "error";
+    if (colName <0 || colGenres < 0 || colCreatedBy < 0 || colNetworks < 0) {
+        cerr << "error in findShow";
         return;
     }
 
@@ -187,24 +207,20 @@ void TVShow::findShow(string csvFile, string userinput) {
         string title = trim(row[colName]);
         string genres = trim(row[colGenres]);
         string creators = trim(row[colCreatedBy]);
+        string networks = trim(row[colNetworks]);
 
         //this while statement is dealing with multiple creators and commas
         while (row.size() > colCreatedBy+1) {
             string followingCreator = trim(row[colCreatedBy+1]);
             if (followingCreator.size() > 2 && !number(followingCreator)) {
-                creators += "," + followingCreator; //add that creator
+                creators += ", " + followingCreator; //add that creator
             }
             row.erase(row.begin()+colCreatedBy+1);
         }
-
-        TVShow show(title, genres, creators);
-
-        //if theres a match, show is found and displayed
-        if (show.checkifMatch(trimmedSearch)) {
-            show.print();
-            showFound = true;
-        }
-
+        //tv show instance
+        TVShow myShow(title,genres,creators,networks);
+        //calls function to check for an exact match of that tv show title in our data set
+        myShow.checkExactMatch(trimmedSearch, showFound);
     }
 
     if (!showFound) {
@@ -217,7 +233,7 @@ int main() {
     string search;
     getline(cin, search);
 
-    TVShow userShow(" ", " ", " ");
+    TVShow userShow(" ", " ", " "," ");
     userShow.findShow("../src/TMDB_tv_dataset_v3.csv", search);
     return 0;
 }
