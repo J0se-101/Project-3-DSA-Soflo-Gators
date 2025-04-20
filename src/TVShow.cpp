@@ -7,6 +7,7 @@
 #include <cctype>
 #include <algorithm>
 #include <unordered_set>
+#include <random>
 
 using namespace std;
 
@@ -379,10 +380,24 @@ void TVShow::recommendByGenre(const string& inputTitle,const unordered_map<strin
     // Print recommendations
     if (recs.empty()) {
         cout << "No recommendations available.\n";
-    } else {
-        for (auto& title : recs) {
+    }
+    //limiting to only 10 random recommendations
+    //Citation: Geeks for Geeks
+    else {
+
+        vector<string> finalRecs(recs.begin(),recs.end());
+        random_device randomValue;
+        mt19937 g(randomValue());
+        shuffle(finalRecs.begin(),finalRecs.end(),g);
+        int count = 0;
+        for (auto& title : finalRecs) {
+            //limits to 10 recommendations outputted
+            if(count++==10) break;
             cout << title << "\n";
         }
+        //for (auto& title : recs) {
+        //    cout << title << "\n";
+        //}
     }
 }
 
@@ -413,10 +428,23 @@ void TVShow::recommendByNetwork(const string& inputTitle,const unordered_map<str
     // Print recommendations
     if (recs.empty()) {
         cout << "No recommendations available.\n";
-    } else {
-        for (auto& title : recs) {
+    }     //limiting to only 10 random recommendations
+        //Citation: Geeks for Geeks
+    else {
+
+        vector<string> finalRecs(recs.begin(),recs.end());
+        random_device randomValue;
+        mt19937 g(randomValue());
+        shuffle(finalRecs.begin(),finalRecs.end(),g);
+        int count = 0;
+        for (auto& title : finalRecs) {
+            //limits to 10 recommendations outputted
+            if(count++==10) break;
             cout << title << "\n";
         }
+        //for (auto& title : recs) {
+        //    cout << title << "\n";
+        //}
     }
 }
 
@@ -497,7 +525,7 @@ int main() {
 
     while(true){
 
-        cout << "Please input here:";
+        cout << "Please input here: ";
         getline(cin, choice);
         choice = TVShow::trim(choice);
         transform(choice.begin(), choice.end(), choice.begin(), ::tolower);
