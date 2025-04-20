@@ -14,13 +14,15 @@ public:
     string genres;
     string creators;
     string networks;
+    int vote_count;
+    float vote_average;
 
     static unordered_map<string, TVShow>  TVShowsMap; //our hash table
 
     //default constructor
     TVShow();
     //constructor
-    TVShow(std::string name, std::string genres, std::string creators, string networks);
+    TVShow(std::string name, std::string genres, std::string creators, string networks, int vote_count, float vote_average);
     //prints out the information
     void print();
     //searching for the name of show

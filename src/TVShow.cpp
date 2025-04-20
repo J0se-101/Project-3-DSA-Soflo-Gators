@@ -8,8 +8,10 @@
 #include <algorithm>
 #include <unordered_set>
 #include <random>
+#include <iomanip>
 
 using namespace std;
+unordered_map<string, TVShow> TVShow::TVShowsMap;
 
 //default constructor
 TVShow::TVShow () {
@@ -17,25 +19,31 @@ TVShow::TVShow () {
     genres = "";
     creators = "";
     networks = "";
+    vote_count = 0;
+    vote_average = 0.0;
 }
 
 //constructor
-TVShow::TVShow (std::string name, std::string genres, std::string creators, string networks) {
+TVShow::TVShow (std::string name, std::string genres, std::string creators, string networks, int vote_count, float vote_average) {
     this->name = name;
     this->genres = genres;
     this->creators = creators;
     this->networks = networks;
+    this->vote_count = vote_count;
+    this->vote_average = vote_average;
 }
 
 //prints information
 void TVShow::print() {
     //prints out the information
-    cout << "TV SHOW INFORMATION"<<endl;
+    cout << "\nTV SHOW INFORMATION"<<endl;
     cout << "-------------------" << endl;
     cout << "TITLE: " << name << std::endl;
     cout <<"GENRES: " << genres << endl;
-    cout<< "CREATED BY: " << creators << std::endl;
     cout<< "SHOW NETWORKS: " << networks << endl;
+    cout << fixed<< setprecision(1);
+    cout<< "RATING: " << vote_average << "/10"<< endl;
+    cout<< "CREATED BY: " << creators << std::endl;
     cout << "\n";
 }
 
@@ -207,9 +215,6 @@ void TVShow::findShow(string csvFile, string userinput) {
     transform(trimmedSearch.begin(), trimmedSearch.end(), trimmedSearch.begin(), ::tolower);
     //citation: geeksforgeeks
 
-    //not used, we used this before we had the hash map
-    //bool showFound = false;
-
     //only builds our master map once if it wasn't built previously
     if(TVShowsMap.empty()) {
         cout << "loading shows ...\n" << endl;
@@ -238,7 +243,7 @@ void TVShow::findShow(string csvFile, string userinput) {
             //making lowercase and tv show instance
             string lowerCaseTitle = title;
             transform(lowerCaseTitle.begin(), lowerCaseTitle.end(), lowerCaseTitle.begin(), ::tolower);
-            TVShow myShow(title, genres, creators, networks);
+            TVShow myShow(title, genres, creators, networks, vote_count, vote_average);
             //adding tv show to the hash map
             TVShowsMap[lowerCaseTitle] = myShow;
         }
@@ -355,6 +360,7 @@ unordered_map<string, vector<string>> TVShow::populateNetworks(unordered_map<str
 void TVShow::recommendByGenre(const string& inputTitle,const unordered_map<string, vector<string>>& genreMap) {
     // Normalize lookup key
     string key = trim(inputTitle);
+    bool printed = false;
     transform(key.begin(), key.end(), key.begin(), ::tolower);
 
     // Ensure the show exists
@@ -384,26 +390,31 @@ void TVShow::recommendByGenre(const string& inputTitle,const unordered_map<strin
     //limiting to only 10 random recommendations
     //Citation: Geeks for Geeks
     else {
-
         vector<string> finalRecs(recs.begin(),recs.end());
         random_device randomValue;
         mt19937 g(randomValue());
         shuffle(finalRecs.begin(),finalRecs.end(),g);
         int count = 0;
         for (auto& title : finalRecs) {
-            //limits to 10 recommendations outputted
-            if(count++==10) break;
-            cout << title << "\n";
+            //limits to 10 recommendations outputted, makes show object to check rating
+            //only provides shows with >=500 votes and >= 6.0 avg. rating
+            auto& tvShow = TVShowsMap[title];
+            if(tvShow.vote_count>=500 && tvShow.vote_average>=6.0){
+                if(count++==10) break;
+                cout << count << ". " << tvShow.name << "\n";
+                printed = true;
+            }
         }
-        //for (auto& title : recs) {
-        //    cout << title << "\n";
-        //}
+    }
+    if (!printed){
+        cout << "No recommendations available." << endl;
     }
 }
 
 void TVShow::recommendByNetwork(const string& inputTitle,const unordered_map<string, vector<string>>& networkMap) {
     // Normalize lookup key
     string key = trim(inputTitle);
+    bool printed = false;
     transform(key.begin(), key.end(), key.begin(), ::tolower);
     // Ensure the show exists
     auto itShow = TVShowsMap.find(key);
@@ -428,27 +439,30 @@ void TVShow::recommendByNetwork(const string& inputTitle,const unordered_map<str
     // Print recommendations
     if (recs.empty()) {
         cout << "No recommendations available.\n";
-    }     //limiting to only 10 random recommendations
+    }
+        //limiting to only 10 random recommendations
         //Citation: Geeks for Geeks
     else {
-
         vector<string> finalRecs(recs.begin(),recs.end());
         random_device randomValue;
         mt19937 g(randomValue());
         shuffle(finalRecs.begin(),finalRecs.end(),g);
         int count = 0;
         for (auto& title : finalRecs) {
-            //limits to 10 recommendations outputted
-            if(count++==10) break;
-            cout << title << "\n";
+            //limits to 10 recommendations outputted, makes show object to check rating
+            //only provides shows with >=500 votes and >= 6.0 avg. rating
+            auto& tvShow = TVShowsMap[title];
+            if(tvShow.vote_count>=500 && tvShow.vote_average>=6.0){
+                if(count++==10) break;
+                cout << count << ". " << tvShow.name << "\n";
+                printed = true;
+            }
         }
-        //for (auto& title : recs) {
-        //    cout << title << "\n";
-        //}
+    }
+    if (!printed){
+        cout << "No recommendations available." << endl;
     }
 }
-
-unordered_map<string, TVShow> TVShow::TVShowsMap;
 
 void TVShow::loadAllShows(const string& csvFile) {
     ifstream file(csvFile, ios::binary);
@@ -459,7 +473,7 @@ void TVShow::loadAllShows(const string& csvFile) {
 
     // read header row to find column indices
     vector<string> header = readRow(file);
-    int colName = -1, colGenres = -1, colCreatedBy = -1, colNetworks = -1;
+    int colName = -1, colGenres = -1, colCreatedBy = -1, colNetworks = -1, colVoteCount=-1, colVoteAverage=-1;
     for (int i = 0; i < header.size(); ++i) {
         string h = header[i];
         transform(h.begin(), h.end(), h.begin(), ::tolower);
@@ -467,8 +481,10 @@ void TVShow::loadAllShows(const string& csvFile) {
         else if (h == "genres") colGenres  = i;
         else if (h == "created_by")  colCreatedBy = i;
         else if (h == "networks")    colNetworks  = i;
+        else if (h == "vote_count")    colVoteCount  = i;
+        else if (h == "vote_average")    colVoteAverage  = i;
     }
-    if (colName<0 || colGenres<0 || colCreatedBy<0 || colNetworks<0) {
+    if (colName<0 || colGenres<0 || colCreatedBy<0 || colNetworks<0 || colVoteCount<0||colVoteAverage <0) {
         cerr << "CSV header missing required columns\n";
         return;
     }
@@ -483,6 +499,8 @@ void TVShow::loadAllShows(const string& csvFile) {
         auto g = trim(row[colGenres]);
         auto c = trim(row[colCreatedBy]);
         auto n = trim(row[colNetworks]);
+        int vc = stoi(trim(row[colVoteCount]));
+        float va = stod(trim(row[colVoteAverage]));
 
         // consume multi‑part creators if any
         while (row.size() > colCreatedBy+1) {
@@ -496,11 +514,11 @@ void TVShow::loadAllShows(const string& csvFile) {
         // insert into the map by lowercase title
         string key = t;
         transform(key.begin(), key.end(), key.begin(), ::tolower);
-        TVShowsMap.emplace(key, TVShow(t, g, c, n));
+        TVShowsMap.emplace(key, TVShow(t, g, c, n, vc, va));
     }
 
     file.close();
-    cout << "Loaded " << TVShowsMap.size() << " shows.\n";
+    cout << "Loaded " << TVShowsMap.size() << " shows <3.\n" << endl;
 }
 
 int main() {
@@ -515,10 +533,10 @@ int main() {
 
     // Menu loop
 
-    cout << "Project 3 DSA: Soflo Gators!\n\n"
-         << "Type '1' to search for a TV show\n"
-         << "Type '2' to receive a recommendation based on a genre\n"
-         << "Type '3' to receive a recommendation based on network\n"
+    cout << "DSA Project 3: Soflo Gators!\n\n"
+         << "Type '1' to search for a TV show.\n"
+         << "Type '2' to receive a recommendation based on a genre.\n"
+         << "Type '3' to receive a recommendation based on network.\n"
          << "Type 'exit' to quit.\n\n";
 
     string choice;
