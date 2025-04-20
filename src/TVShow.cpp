@@ -7,6 +7,7 @@
 #include <limits>
 #include <cctype>
 #include <algorithm>
+#include <unordered_set>
 
 using namespace std;
 
@@ -260,6 +261,56 @@ vector<string> TVShow::splitstring(string s, char delimiter) {
     return splitStrings;
 }
 
+unordered_map<string, vector<string>> TVShow::genreGraphBuilder(unordered_map<string, vector<string>> &genreMap) {
+    unordered_map<string, vector<string>> genreGraph;
+    //graph
+    //looping thru genres
+    for (auto genreIter = genreMap.begin(); genreIter != genreMap.end(); genreIter++) {
+        //value is shows, key is genre
+        vector<string> shows = genreIter->second;
+        //connecting the shows that share same genres
+        for (int show1 = 0; show1 < shows.size(); show1++) {
+            string showOne = shows[show1];
+            transform(showOne.begin(), showOne.end(), showOne.begin(), ::tolower);
+            for (int show2 = 0; show2 < shows.size(); show2++) {
+                //this is to prevent shows from linking to themselves
+                if (show1 != show2) {
+                    //if the show isn't the same, then add an edge!
+                    string showTwo = shows[show2];
+                    transform(showTwo.begin(), showTwo.end(), showTwo.begin(), ::tolower);
+                    genreGraph[showOne].push_back(showTwo);
+                    genreGraph[showTwo].push_back(showOne);
+                }
+            }
+        }
+    }
+    return genreGraph;
+}
+
+unordered_map<string, vector<string>> TVShow::networkGraphBuilder(unordered_map<string, vector<string>> &networkMap) {
+    unordered_map<string, vector<string>> networkGraph;
+    //looping thru networks
+    for (auto networkIter = networkMap.begin(); networkIter != networkMap.end(); networkIter++) {
+        vector<string> shows = networkIter->second;
+        //value is shows, key is network
+        //connecting the shows that share same network
+        for (int show1 = 0; show1 < shows.size(); show1++) {
+            string showOne = shows[show1];
+            transform(showOne.begin(), showOne.end(), showOne.begin(), ::tolower);
+            for (int show2 = 0; show2 < shows.size(); show2++) {
+                //don't want a show linking to itself
+                if (show1 != show2) {
+                    //if the show isn't the same, then add an edge!
+                    string showTwo = shows[show2];
+                    transform(showTwo.begin(), showTwo.end(), showTwo.begin(), ::tolower);
+                    networkGraph[showOne].push_back(showTwo);
+                }
+            }
+        }
+    }
+    return networkGraph;
+}
+
 
 unordered_map<string, vector<string>> TVShow::populateGenres(unordered_map<string, TVShow> TVShowsMap) {
     unordered_map<string, vector<string>> similarGenres;
@@ -299,70 +350,118 @@ unordered_map<string, vector<string>> TVShow::populateNetworks(unordered_map<str
     return similarNetworks;
 }
 
-//building the graph based on connection either between genre or network
-unordered_map<string, vector<string>> TVShow::graphBuilder(unordered_map<string, vector<string>> &genreMap,
-    unordered_map<string, vector<string>> &networkMap) {
-    //graph
-    unordered_map<string, vector<string>> buildGraph;
-    //looping thru genres
-    for (auto genreIter = genreMap.begin(); genreIter != genreMap.end(); genreIter++) {
-        //value is shows, key is genre
-        vector<string> shows = genreIter->second;
-        //connecting the shows that share same genres
-        for (int show1 = 0; show1 < shows.size(); show1++) {
-            for (int show2 = 0; show2 < shows.size(); show2++) {
-                //this is to prevent shows from linking to themselves
-                if (show1 != show2) {
-                    //if the show isn't the same, then add an edge!
-                    string showOne = shows[show1];
-                    string showTwo = shows[show2];
-                    buildGraph[showOne].push_back(showTwo);
-                }
+void TVShow::recommendations(string title, unordered_map<string, vector<string>> &graph) {
+    title = trim(title);
+    transform(title.begin(), title.end(), title.begin(), ::tolower);
+
+    if (graph.find(title) == graph.end()) {
+        cout << "No titles match :( Please try again.\n";
+        return;
+    }
+
+    vector<string> recommendedShows = graph[title];
+    unordered_set<string> printedShows;
+
+    for (int i = 0; i < recommendedShows.size(); i++) {
+        string show = recommendedShows[i];
+        if (printedShows.find(show) == printedShows.end()) {
+            if (show != title) {
+                cout << "♥" << show << endl;
+                printedShows.insert(show);
             }
         }
     }
 
-    //looping thru networks
-    for (auto networkIter = networkMap.begin(); networkIter != networkMap.end(); networkIter++) {
-        vector<string> shows = networkIter->second;
-        //value is shows, key is network
-        //connecting the shows that share same network
-        for (int show1 = 0; show1 < shows.size(); show1++) {
-            for (int show2 = 0; show2 < shows.size(); show2++) {
-                //don't want a show linking to itself
-                if (show1 != show2) {
-                    //if the show isn't the same, then add an edge!
-                    string showOne = shows[show1];
-                    string showTwo = shows[show2];
-                    buildGraph[showOne].push_back(showTwo);
-                }
-            }
-        }
+    if (printedShows.empty()) {
+        cout << "No recommendations available.";
     }
-    return buildGraph;
 }
 
 int main() {
     TVShow userShow(" ", " ", " "," ");
+    bool builtgraph = false;
+    unordered_map<string, vector<string>> genreGraph;
+    unordered_map<string, vector<string>> networkGraph;
+
     string search;
     cout << "Project 3 DSA: Soflo Gators!" << endl;
     //add tv show graph connections code later
-    cout << "Type '1' for similar TV Show Recommendations based on ____!" << endl;
-
+    cout << "Type '1' to search for a TV show" << endl;
+    cout << "Type '2' to receive a recommendation based on a genre" << endl;
+    cout << "Type '3' to receive a recommendation based on network" << endl;
     cout << "Type 'exit' to quit.\n" << endl;
 
     while(true){
-        cout << "Search for show title: " << endl;
-        getline(cin, search);
+
+        string userSelection;
+        cout << "Please input here:";
+        getline(cin, userSelection);
+        userSelection = TVShow::trim(userSelection);
+        transform(userSelection.begin(), userSelection.end(), userSelection.begin(), ::tolower);
+        // getline(cin, search);
         //trimming search for exit to be identified when inputted
-        search = TVShow::trim(search);
-        string lowerCaseSearch = search;
-        transform(lowerCaseSearch.begin(), lowerCaseSearch.end(), lowerCaseSearch.begin(), ::tolower);
-        if(lowerCaseSearch == "exit"){
+        // search = TVShow::trim(search);
+        // string lowerCaseSearch = search;
+        // transform(lowerCaseSearch.begin(), lowerCaseSearch.end(), lowerCaseSearch.begin(), ::tolower);
+        if(userSelection == "exit"){
             break;
         }
-        userShow.findShow("../src/TMDB_tv_dataset_v3.csv", search);
-        cout << endl;
+        if (userSelection == "1") {
+            cout << "Search for show title: " << endl;
+            getline(cin, search);
+            userShow.findShow("../src/TMDB_tv_dataset_v3.csv", search);
+            cout << endl;
+
+            if (!builtgraph) {
+                unordered_map<string, vector<string>> genreMap;
+                genreMap = userShow.populateGenres(userShow.TVShowsMap);
+
+                unordered_map<string, vector<string>> networkMap;
+                networkMap = userShow.populateNetworks(userShow.TVShowsMap);
+
+                genreGraph = userShow.genreGraphBuilder(genreMap);
+                networkGraph = userShow.networkGraphBuilder(networkMap);
+                builtgraph = true;
+            }
+        }
+
+        else if (userSelection == "2") {
+            if (!builtgraph) {
+                unordered_map<string, vector<string>> genreMap;
+                genreMap = userShow.populateGenres(userShow.TVShowsMap);
+
+                unordered_map<string, vector<string>> networkMap;
+                networkMap = userShow.populateNetworks(userShow.TVShowsMap);
+
+                genreGraph = userShow.genreGraphBuilder(genreMap);
+                networkGraph = userShow.networkGraphBuilder(networkMap);
+                builtgraph = true;
+            }
+            cout << "Enter a show title to receive a recommendation based on genre" << endl;
+            getline(cin, search);
+            userShow.recommendations(search, genreGraph);
+        }
+
+        else if (userSelection == "3") {
+            if (!builtgraph) {
+                unordered_map<string, vector<string>> genreMap;
+                genreMap = userShow.populateGenres(userShow.TVShowsMap);
+
+                unordered_map<string, vector<string>> networkMap;
+                networkMap = userShow.populateNetworks(userShow.TVShowsMap);
+
+                genreGraph = userShow.genreGraphBuilder(genreMap);
+                networkGraph = userShow.networkGraphBuilder(networkMap);
+                builtgraph = true;
+            }
+            cout <<"Enter a show title to receive a recommendation based on network" << endl;
+            getline(cin, search);
+            userShow.recommendations(search, networkGraph);
+        }
+
+        else {
+            cout << "Invalid input." << endl;
+        }
     }
     return 0;
 }

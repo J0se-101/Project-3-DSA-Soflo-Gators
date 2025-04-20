@@ -14,6 +14,7 @@ public:
     std::string genres;
     std:: string creators;
     string networks;
+    unordered_map<string, TVShow>  TVShowsMap; //our hash table
 
     //default constructor
     TVShow();
@@ -44,10 +45,12 @@ public:
     //helper function for networks and genres
     vector<string> splitstring(string s, char delimiter);
     //building the graph
-    unordered_map<string, vector<string>> graphBuilder(unordered_map<string, vector<string>>& genreMap, unordered_map<string, vector<string>>& networkMap);
+    unordered_map<string, vector<string>> genreGraphBuilder(unordered_map<string, vector<string>>& genreMap);
+    unordered_map<string, vector<string>> networkGraphBuilder(unordered_map<string, vector<string>>& networkMap);
+    //recommending based on genre or network
+    void recommendations (string title, unordered_map<string, vector<string>>& graph);
 private:
     unordered_map<string, vector<string>> graph; //graph
-    unordered_map<string, TVShow>  TVShowsMap; //our hash table
     unordered_map<string, vector<string>> genreMap; //genres
     unordered_map<string, vector<string>> networkMap; //networks
 };
