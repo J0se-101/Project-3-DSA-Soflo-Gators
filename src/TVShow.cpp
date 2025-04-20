@@ -4,7 +4,6 @@
 #include <vector>
 #include <string>
 #include "TVShow.h"
-#include <limits>
 #include <cctype>
 #include <algorithm>
 #include <unordered_set>
@@ -30,11 +29,11 @@ TVShow::TVShow (std::string name, std::string genres, std::string creators, stri
 //prints information
 void TVShow::print() {
     //prints out the information
-    std::cout << "TV SHOW INFORMATION"<<endl;
+    cout << "TV SHOW INFORMATION"<<endl;
     cout << "-------------------" << endl;
-    std::cout << "TITLE: " << name << std::endl;
-    std::cout <<"GENRES: " << genres << endl;
-    std::cout<< "CREATED BY: " << creators << std::endl;
+    cout << "TITLE: " << name << std::endl;
+    cout <<"GENRES: " << genres << endl;
+    cout<< "CREATED BY: " << creators << std::endl;
     cout<< "SHOW NETWORKS: " << networks << endl;
     cout << "\n";
 }
@@ -147,7 +146,7 @@ string TVShow::column(vector<string> row, int colNum) {
     return "No information available.";
 }
 
-//accessing wanted columns, not all of the ones in csv
+//accessing wanted columns, not all the ones in csv
 vector<string> TVShow::filterCol (vector<string> row, vector<int> index) {
     vector<string> columns;
     for (int i = 0; i < index.size(); i++) {
@@ -264,7 +263,7 @@ vector<string> TVShow::splitstring(string s, char delimiter) {
 unordered_map<string, vector<string>> TVShow::genreGraphBuilder(unordered_map<string, vector<string>> &genreMap) {
     unordered_map<string, vector<string>> genreGraph;
     //graph
-    //looping thru genres
+    //looping through genres
     for (auto genreIter = genreMap.begin(); genreIter != genreMap.end(); genreIter++) {
         //value is shows, key is genre
         vector<string> shows = genreIter->second;
@@ -289,7 +288,7 @@ unordered_map<string, vector<string>> TVShow::genreGraphBuilder(unordered_map<st
 
 unordered_map<string, vector<string>> TVShow::networkGraphBuilder(unordered_map<string, vector<string>> &networkMap) {
     unordered_map<string, vector<string>> networkGraph;
-    //looping thru networks
+    //looping through networks
     for (auto networkIter = networkMap.begin(); networkIter != networkMap.end(); networkIter++) {
         vector<string> shows = networkIter->second;
         //value is shows, key is network
@@ -377,90 +376,116 @@ void TVShow::recommendations(string title, unordered_map<string, vector<string>>
     }
 }
 
-int main() {
-    TVShow userShow(" ", " ", " "," ");
-    bool builtgraph = false;
-    unordered_map<string, vector<string>> genreGraph;
-    unordered_map<string, vector<string>> networkGraph;
+unordered_map<string, TVShow> TVShow::TVShowsMap;
 
-    string search;
-    cout << "Project 3 DSA: Soflo Gators!" << endl;
-    //add tv show graph connections code later
-    cout << "Type '1' to search for a TV show" << endl;
-    cout << "Type '2' to receive a recommendation based on a genre" << endl;
-    cout << "Type '3' to receive a recommendation based on network" << endl;
-    cout << "Type 'exit' to quit.\n" << endl;
+void TVShow::loadAllShows(const string& csvFile) {
+    ifstream file(csvFile);
+    if (!file.is_open()) {
+        cerr << "Error opening file " << csvFile << endl;
+        return;
+    }
+
+    // read header row to find column indices
+    vector<string> header = readRow(file);
+    int colName = -1, colGenres = -1, colCreatedBy = -1, colNetworks = -1;
+    for (int i = 0; i < header.size(); ++i) {
+        string h = header[i];
+        transform(h.begin(), h.end(), h.begin(), ::tolower);
+        if (h == "name")        colName    = i;
+        else if (h == "genres") colGenres  = i;
+        else if (h == "created_by")  colCreatedBy = i;
+        else if (h == "networks")    colNetworks  = i;
+    }
+    if (colName<0 || colGenres<0 || colCreatedBy<0 || colNetworks<0) {
+        cerr << "CSV header missing required columns\n";
+        return;
+    }
+
+    // read each data row
+    while (true) {
+        vector<string> row = readRow(file);
+        if (row.empty()) break;
+
+        // trim & extract
+        auto t = trim(row[colName]);
+        auto g = trim(row[colGenres]);
+        auto c = trim(row[colCreatedBy]);
+        auto n = trim(row[colNetworks]);
+
+        // consume multi‑part creators if any
+        while (row.size() > colCreatedBy+1) {
+            string extra = trim(row[colCreatedBy+1]);
+            if (extra.size()>2 && !number(extra)) {
+                c += ", " + extra;
+                row.erase(row.begin() + colCreatedBy+1);
+            } else break;
+        }
+
+        // insert into the map by lowercase title
+        string key = t;
+        transform(key.begin(), key.end(), key.begin(), ::tolower);
+        TVShowsMap.emplace(key, TVShow(t, g, c, n));
+    }
+
+    file.close();
+    cout << "Loaded " << TVShowsMap.size() << " shows.\n";
+}
+
+int main() {
+
+    //Load and parse the CSV once
+    TVShow::loadAllShows("../src/TMDB_tv_dataset_v3.csv");
+
+    //Build both graphs once at startup
+    TVShow helper;
+    auto genreMap    = helper.populateGenres(TVShow::TVShowsMap);
+    auto networkMap  = helper.populateNetworks(TVShow::TVShowsMap);
+    auto genreGraph  = helper.genreGraphBuilder(genreMap);
+    auto networkGraph= helper.networkGraphBuilder(networkMap);
+
+    // Menu loop
+
+    cout << "Project 3 DSA: Soflo Gators!\n\n"
+         << "Type '1' to search for a TV show\n"
+         << "Type '2' to receive a recommendation based on a genre\n"
+         << "Type '3' to receive a recommendation based on network\n"
+         << "Type 'exit' to quit.\n\n";
+
+    string choice;
 
     while(true){
 
-        string userSelection;
         cout << "Please input here:";
-        getline(cin, userSelection);
-        userSelection = TVShow::trim(userSelection);
-        transform(userSelection.begin(), userSelection.end(), userSelection.begin(), ::tolower);
-        // getline(cin, search);
-        //trimming search for exit to be identified when inputted
-        // search = TVShow::trim(search);
-        // string lowerCaseSearch = search;
-        // transform(lowerCaseSearch.begin(), lowerCaseSearch.end(), lowerCaseSearch.begin(), ::tolower);
-        if(userSelection == "exit"){
+        getline(cin, choice);
+        choice = TVShow::trim(choice);
+        transform(choice.begin(), choice.end(), choice.begin(), ::tolower);
+
+        if(choice == "exit"){
             break;
         }
-        if (userSelection == "1") {
-            cout << "Search for show title: " << endl;
-            getline(cin, search);
-            userShow.findShow("../src/TMDB_tv_dataset_v3.csv", search);
-            cout << endl;
-
-            if (!builtgraph) {
-                unordered_map<string, vector<string>> genreMap;
-                genreMap = userShow.populateGenres(userShow.TVShowsMap);
-
-                unordered_map<string, vector<string>> networkMap;
-                networkMap = userShow.populateNetworks(userShow.TVShowsMap);
-
-                genreGraph = userShow.genreGraphBuilder(genreMap);
-                networkGraph = userShow.networkGraphBuilder(networkMap);
-                builtgraph = true;
-            }
+        else if (choice == "1") {
+            cout << "Search for show title: ";
+            string title;
+            getline(cin, title);
+            helper.findShow("../src/TMDB_tv_dataset_v3.csv", title);
+            cout << "\n";
         }
-
-        else if (userSelection == "2") {
-            if (!builtgraph) {
-                unordered_map<string, vector<string>> genreMap;
-                genreMap = userShow.populateGenres(userShow.TVShowsMap);
-
-                unordered_map<string, vector<string>> networkMap;
-                networkMap = userShow.populateNetworks(userShow.TVShowsMap);
-
-                genreGraph = userShow.genreGraphBuilder(genreMap);
-                networkGraph = userShow.networkGraphBuilder(networkMap);
-                builtgraph = true;
-            }
-            cout << "Enter a show title to receive a recommendation based on genre" << endl;
-            getline(cin, search);
-            userShow.recommendations(search, genreGraph);
+        else if (choice == "2") {
+            cout << "Enter a show title to receive a recommendation based on genre: ";
+            string title;
+            getline(cin, title);
+            helper.recommendations(title, genreGraph);
+            cout << "\n";
         }
-
-        else if (userSelection == "3") {
-            if (!builtgraph) {
-                unordered_map<string, vector<string>> genreMap;
-                genreMap = userShow.populateGenres(userShow.TVShowsMap);
-
-                unordered_map<string, vector<string>> networkMap;
-                networkMap = userShow.populateNetworks(userShow.TVShowsMap);
-
-                genreGraph = userShow.genreGraphBuilder(genreMap);
-                networkGraph = userShow.networkGraphBuilder(networkMap);
-                builtgraph = true;
-            }
-            cout <<"Enter a show title to receive a recommendation based on network" << endl;
-            getline(cin, search);
-            userShow.recommendations(search, networkGraph);
+        else if (choice == "3") {
+            cout << "Enter a show title to receive a recommendation based on network: ";
+            string title;
+            getline(cin, title);
+            helper.recommendations(title, networkGraph);
+            cout << "\n";
         }
-
         else {
-            cout << "Invalid input." << endl;
+            cout << "Invalid input.\n\n";
         }
     }
     return 0;
