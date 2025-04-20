@@ -44,14 +44,17 @@ public:
     unordered_map<string, vector<string>> populateNetworks(unordered_map<string, TVShow> TVShowsMap);
 
     //helper function for networks and genres
-    vector<string> splitstring(string s, char delimiter);
+    static vector<string> splitstring(string s, char delimiter);
 
     //building the graph
     unordered_map<string, vector<string>> genreGraphBuilder(unordered_map<string, vector<string>>& genreMap);
     unordered_map<string, vector<string>> networkGraphBuilder(unordered_map<string, vector<string>>& networkMap);
 
     //recommending based on genre or network
-    void recommendations (string title, unordered_map<string, vector<string>>& graph);
+
+    void recommendByGenre(const string& inputTitle,const unordered_map<std::string, vector<string>>& genreMap);
+
+    void recommendByNetwork(const string& inputTitle,const unordered_map<std::string, vector<string>>& networkMap);
 
     //load every show into the static map once
     static void loadAllShows(const string& csvFile);

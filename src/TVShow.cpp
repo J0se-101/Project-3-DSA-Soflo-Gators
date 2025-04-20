@@ -110,6 +110,7 @@ vector <string> TVShow::readRow(istream& input) {
 
     while (input.get(c)) {
         //handling quotes
+
         if (c == '"') {
             if (quotes && input.peek() == '"') {
                 category += '"';
@@ -133,6 +134,7 @@ vector <string> TVShow::readRow(istream& input) {
             category += c; //add character to column
         }
     }
+
     return columns; //columns from the row that was read
 }
 
@@ -162,7 +164,7 @@ vector<string> TVShow::filterCol (vector<string> row, vector<int> index) {
 
 //finding show, printing show name, genre, and who it was created by
 void TVShow::findShow(string csvFile, string userinput) {
-    ifstream file(csvFile);
+    ifstream file(csvFile, ios::binary);
     if (!file.is_open()) {
         cerr << "Error opening file " << csvFile << endl;
         return;
@@ -315,7 +317,7 @@ unordered_map<string, vector<string>> TVShow::populateGenres(unordered_map<strin
     unordered_map<string, vector<string>> similarGenres;
     //key is the genre, vector is the vector of show titles
     for (auto iter = TVShowsMap.begin(); iter != TVShowsMap.end(); iter++) {
-        string title = iter->first;
+        string title = (iter->first);
         TVShow show = iter->second;
 
         string genres = show.genres;
@@ -334,7 +336,7 @@ unordered_map<string, vector<string>> TVShow::populateNetworks(unordered_map<str
     unordered_map<string, vector<string>> similarNetworks;
     //key is the network, vector is the show titles
     for (auto iter = TVShowsMap.begin(); iter != TVShowsMap.end(); iter++) {
-        string title = iter->first;
+        string title =iter->first;
         TVShow show = iter->second;
 
         string networks = show.networks;
@@ -349,37 +351,79 @@ unordered_map<string, vector<string>> TVShow::populateNetworks(unordered_map<str
     return similarNetworks;
 }
 
-void TVShow::recommendations(string title, unordered_map<string, vector<string>> &graph) {
-    title = trim(title);
-    transform(title.begin(), title.end(), title.begin(), ::tolower);
+void TVShow::recommendByGenre(const string& inputTitle,const unordered_map<string, vector<string>>& genreMap) {
+    // Normalize lookup key
+    string key = trim(inputTitle);
+    transform(key.begin(), key.end(), key.begin(), ::tolower);
 
-    if (graph.find(title) == graph.end()) {
-        cout << "No titles match :( Please try again.\n";
+    // Ensure the show exists
+    auto itShow = TVShowsMap.find(key);
+    if (itShow == TVShowsMap.end()) {
+        cout << "No titles match :(\n";
         return;
     }
 
-    vector<string> recommendedShows = graph[title];
-    unordered_set<string> printedShows;
+    // Split its genres into individual categories
+    vector<string> categories = splitstring(itShow->second.genres, ',');
+    unordered_set<string> recs;
 
-    for (int i = 0; i < recommendedShows.size(); i++) {
-        string show = recommendedShows[i];
-        if (printedShows.find(show) == printedShows.end()) {
-            if (show != title) {
-                cout << "♥" << show << endl;
-                printedShows.insert(show);
-            }
+    // For each genre bucket, collect other shows
+    for (auto& genre : categories) {
+        auto itBucket = genreMap.find(genre);
+        if (itBucket == genreMap.end()) continue;
+        for (auto& other : itBucket->second) {
+            if (other != key) recs.insert(other);
         }
     }
 
-    if (printedShows.empty()) {
-        cout << "No recommendations available.";
+    // Print recommendations
+    if (recs.empty()) {
+        cout << "No recommendations available.\n";
+    } else {
+        for (auto& title : recs) {
+            cout << title << "\n";
+        }
+    }
+}
+
+void TVShow::recommendByNetwork(const string& inputTitle,const unordered_map<string, vector<string>>& networkMap) {
+    // Normalize lookup key
+    string key = trim(inputTitle);
+    transform(key.begin(), key.end(), key.begin(), ::tolower);
+    // Ensure the show exists
+    auto itShow = TVShowsMap.find(key);
+    if (itShow == TVShowsMap.end()) {
+        cout << "No titles match :(\n";
+        return;
+    }
+
+    // Split its networks into individual categories
+    vector<string> categories = splitstring(itShow->second.networks, ',');
+    unordered_set<string> recs;
+
+    // For each network bucket, collect other shows
+    for (auto& network : categories) {
+        auto itBucket = networkMap.find(network);
+        if (itBucket == networkMap.end()) continue;
+        for (auto& other : itBucket->second) {
+            if (other != key) recs.insert(other);
+        }
+    }
+
+    // Print recommendations
+    if (recs.empty()) {
+        cout << "No recommendations available.\n";
+    } else {
+        for (auto& title : recs) {
+            cout << title << "\n";
+        }
     }
 }
 
 unordered_map<string, TVShow> TVShow::TVShowsMap;
 
 void TVShow::loadAllShows(const string& csvFile) {
-    ifstream file(csvFile);
+    ifstream file(csvFile, ios::binary);
     if (!file.is_open()) {
         cerr << "Error opening file " << csvFile << endl;
         return;
@@ -440,8 +484,6 @@ int main() {
     TVShow helper;
     auto genreMap    = helper.populateGenres(TVShow::TVShowsMap);
     auto networkMap  = helper.populateNetworks(TVShow::TVShowsMap);
-    auto genreGraph  = helper.genreGraphBuilder(genreMap);
-    auto networkGraph= helper.networkGraphBuilder(networkMap);
 
     // Menu loop
 
@@ -474,14 +516,14 @@ int main() {
             cout << "Enter a show title to receive a recommendation based on genre: ";
             string title;
             getline(cin, title);
-            helper.recommendations(title, genreGraph);
+            helper.recommendByGenre(title, genreMap);
             cout << "\n";
         }
         else if (choice == "3") {
             cout << "Enter a show title to receive a recommendation based on network: ";
             string title;
             getline(cin, title);
-            helper.recommendations(title, networkGraph);
+            helper.recommendByNetwork(title, networkMap);
             cout << "\n";
         }
         else {
