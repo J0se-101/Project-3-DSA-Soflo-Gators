@@ -8,4 +8,9 @@ include_directories(src)
 add_executable(Project_3_DSA_Soflo_Gators
         src/TMDB_tv_dataset_v3.csv
         src/TVShow.cpp
-        src/TVShow.h)
+        src/TVShow.h
+        src/hashmaps.cpp
+        src/hashmaps.h
+        graph.cpp
+        graph.h
+        graph.h)
