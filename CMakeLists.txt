@@ -11,6 +11,6 @@ add_executable(Project_3_DSA_Soflo_Gators
         src/TVShow.h
         src/hashmaps.cpp
         src/hashmaps.h
-        graph.cpp
-        graph.h
-        graph.h)
+        src/graph.cpp
+        src/graph.h
+        src/graph.h)

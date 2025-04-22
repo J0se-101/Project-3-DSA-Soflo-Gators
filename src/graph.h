@@ -27,12 +27,11 @@ private:
     int findVertex(string title);
 
     public:
-    Graph();
     ~Graph();
     Graph(int maxShows);
     void addShow(string title);
     //links two tv shows
-    void addConnection(string title, string connection);
+    void addConnection(string showOne, string showTwo);
     //get edges for the show
     Edge* findEdge(string title);
     bool findShow(string title);
