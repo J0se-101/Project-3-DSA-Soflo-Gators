@@ -9,9 +9,12 @@
 #include <unordered_set>
 #include <random>
 #include <iomanip>
+#include <chrono>
 
 using namespace std;
+
 unordered_map<string, TVShow> TVShow::TVShowsMap;
+HashMaps TVShow::CustomMap;
 
 //default constructor
 TVShow::TVShow () {
@@ -143,7 +146,6 @@ vector <string> TVShow::readRow(istream& input) {
             category += c; //add character to column
         }
     }
-
     return columns; //columns from the row that was read
 }
 
@@ -221,6 +223,7 @@ void TVShow::findShow(string csvFile, string userinput) {
         //reading each row from csv file
         while (true) {
             vector<string> row = readRow(file);
+
             if (row.empty()) {
                 break;
             }
@@ -243,7 +246,7 @@ void TVShow::findShow(string csvFile, string userinput) {
             //making lowercase and tv show instance
             string lowerCaseTitle = title;
             transform(lowerCaseTitle.begin(), lowerCaseTitle.end(), lowerCaseTitle.begin(), ::tolower);
-            TVShow myShow(title, genres, creators, networks, vote_count, vote_average);
+            TVShow myShow(title, genres, creators, networks, 0, 0.0);
             //adding tv show to the hash map
             TVShowsMap[lowerCaseTitle] = myShow;
         }
@@ -355,6 +358,113 @@ unordered_map<string, vector<string>> TVShow::populateNetworks(unordered_map<str
         }
     }
     return similarNetworks;
+}
+
+//custom hash map recommend functions: used for quick lookup for finding the tv show object by title
+void TVShow::recommendByGenreHash(const string& inputTitle,const unordered_map<string, vector<string>>& genreMap) {
+    //Normalize lookup key
+    string key = trim(inputTitle);
+    bool printed = false;
+    transform(key.begin(), key.end(), key.begin(), ::tolower);
+
+    //Ensuring that the show exists
+    TVShow* show = CustomMap.getShow(key);
+    if (!show) {
+        cout << "No titles match :(\n";
+        return;
+    }
+
+    //Splits its genres into individual categories
+    vector<string> categories = splitstring(show->genres, ',');
+    unordered_set<string> recs;
+
+    //For each genre bucket, we collect other shows
+    for (auto& genre : categories) {
+        auto itBucket = genreMap.find(genre);
+        if (itBucket == genreMap.end()) continue;
+        for (auto& other : itBucket->second) {
+            if (other != key) recs.insert(other);
+        }
+    }
+
+    //Prints recommendations
+    if (recs.empty()) {
+        cout << "No recommendations available.\n";
+    }
+    //Citation: Geeks for Geeks
+    else {
+        vector<string> finalRecs(recs.begin(),recs.end());
+        random_device randomValue;
+        mt19937 g(randomValue());
+        shuffle(finalRecs.begin(),finalRecs.end(),g);
+        int count = 0;
+        for (auto& title : finalRecs) {
+            //limits to 10 recommendations outputted, makes show object to check rating
+            //only provides shows with >=500 votes and >= 6.0 avg. rating
+            TVShow* rec = CustomMap.getShow(title);
+            if(rec && rec->vote_count>=500 && rec->vote_average>=6.0){
+                if(count++==10) break;
+                cout << count << ". " << rec->name << "\n";
+                printed = true;
+            }
+        }
+    }
+    if (!printed){
+        cout << "No recommendations available." << endl;
+    }
+}
+
+void TVShow::recommendByNetworkHash(const string& inputTitle,const unordered_map<string, vector<string>>& networkMap) {
+    //Normalize lookup key
+    string key = trim(inputTitle);
+    bool printed = false;
+    transform(key.begin(), key.end(), key.begin(), ::tolower);
+
+    //Ensuring that the show exists
+    TVShow* show = CustomMap.getShow(key);
+    if (!show) {
+        cout << "No titles match :(\n";
+        return;
+    }
+
+    //Splits its genres into individual categories
+    vector<string> categories = splitstring(show->networks, ',');
+    unordered_set<string> recs;
+
+    //For each genre bucket, we collect other shows
+    for (auto& genre : categories) {
+        auto itBucket = networkMap.find(genre);
+        if (itBucket == networkMap.end()) continue;
+        for (auto& other : itBucket->second) {
+            if (other != key) recs.insert(other);
+        }
+    }
+
+    //Prints recommendations
+    if (recs.empty()) {
+        cout << "No recommendations available.\n";
+    }
+    //Citation: Geeks for Geeks
+    else {
+        vector<string> finalRecs(recs.begin(),recs.end());
+        random_device randomValue;
+        mt19937 g(randomValue());
+        shuffle(finalRecs.begin(),finalRecs.end(),g);
+        int count = 0;
+        for (auto& title : finalRecs) {
+            //limits to 10 recommendations outputted, makes show object to check rating
+            //only provides shows with >=500 votes and >= 6.0 avg. rating
+            TVShow* rec = CustomMap.getShow(title);
+            if(rec && rec->vote_count>=500 && rec->vote_average>=6.0){
+                if(count++==10) break;
+                cout << count << ". " << rec->name << "\n";
+                printed = true;
+            }
+        }
+    }
+    if (!printed){
+        cout << "No recommendations available." << endl;
+    }
 }
 
 void TVShow::recommendByGenre(const string& inputTitle,const unordered_map<string, vector<string>>& genreMap) {
@@ -470,8 +580,7 @@ void TVShow::loadAllShows(const string& csvFile) {
         cerr << "Error opening file " << csvFile << endl;
         return;
     }
-
-    // read header row to find column indices
+    //reads header row to find column indices
     vector<string> header = readRow(file);
     int colName = -1, colGenres = -1, colCreatedBy = -1, colNetworks = -1, colVoteCount=-1, colVoteAverage=-1;
     for (int i = 0; i < header.size(); ++i) {
@@ -489,10 +598,16 @@ void TVShow::loadAllShows(const string& csvFile) {
         return;
     }
 
-    // read each data row
+    //reads each data row
     while (true) {
         vector<string> row = readRow(file);
         if (row.empty()) break;
+
+
+        int requiredCols = max({colName,colGenres,colCreatedBy,colNetworks,colVoteCount,colVoteAverage});
+        if(row.size()<=requiredCols){
+            continue;
+        }
 
         // trim & extract
         auto t = trim(row[colName]);
@@ -501,9 +616,23 @@ void TVShow::loadAllShows(const string& csvFile) {
         auto n = trim(row[colNetworks]);
         int vc = stoi(trim(row[colVoteCount]));
         float va = stod(trim(row[colVoteAverage]));
+        //used for debugging, keep until finally done in case we run into issues
+        /*int vc=0;
+        float va=0.0;
+        string voteCountStr = trim(row[colVoteCount]);
+        string voteAvgStr = trim(row[colVoteAverage]);
+        if(!voteCountStr.empty()){
+            vc=stoi(voteCountStr);
+        }
+        if(!voteAvgStr.empty()){
+            va=stof(voteAvgStr);
+        }*/
 
-        // consume multi‑part creators if any
+        //consume multi‑part creators if any
         while (row.size() > colCreatedBy+1) {
+            if(colCreatedBy+1>=row.size()){
+                break;
+            }
             string extra = trim(row[colCreatedBy+1]);
             if (extra.size()>2 && !number(extra)) {
                 c += ", " + extra;
@@ -511,10 +640,12 @@ void TVShow::loadAllShows(const string& csvFile) {
             } else break;
         }
 
-        // insert into the map by lowercase title
+        //insert into the map by lowercase title
         string key = t;
+
         transform(key.begin(), key.end(), key.begin(), ::tolower);
         TVShowsMap.emplace(key, TVShow(t, g, c, n, vc, va));
+        CustomMap.insert(key, new TVShow(t, g, c, n, vc, va));
     }
 
     file.close();
@@ -522,7 +653,6 @@ void TVShow::loadAllShows(const string& csvFile) {
 }
 
 int main() {
-
     //Load and parse the CSV once
     TVShow::loadAllShows("../src/TMDB_tv_dataset_v3.csv");
 
@@ -530,13 +660,14 @@ int main() {
     TVShow helper;
     auto genreMap    = helper.populateGenres(TVShow::TVShowsMap);
     auto networkMap  = helper.populateNetworks(TVShow::TVShowsMap);
-
     // Menu loop
 
     cout << "DSA Project 3: Soflo Gators!\n\n"
          << "Type '1' to search for a TV show.\n"
          << "Type '2' to receive a recommendation based on a genre.\n"
          << "Type '3' to receive a recommendation based on network.\n"
+         << "Type '4' to receive a recommendation based on genre using HashMap.\n"
+         << "Type '5' to receive a recommendation based on network using HashMap.\n"
          << "Type 'exit' to quit.\n\n";
 
     string choice;
@@ -562,7 +693,14 @@ int main() {
             cout << "Enter a show title to receive a recommendation based on genre: ";
             string title;
             getline(cin, title);
+
+            //timing code
+            auto start = chrono::high_resolution_clock::now();
             helper.recommendByGenre(title, genreMap);
+            auto end = chrono::high_resolution_clock::now();
+            auto duration = chrono::duration_cast<chrono::microseconds>(end-start);
+            cout <<"LIBRARY unordered_map Execution Time: " << duration.count()<< " microseconds!"<< endl;
+            cout << "\n";
             cout << "\n";
         }
         else if (choice == "3") {
@@ -570,6 +708,26 @@ int main() {
             string title;
             getline(cin, title);
             helper.recommendByNetwork(title, networkMap);
+            cout << "\n";
+        }
+        else if (choice == "4") {
+            cout << "Enter a show title to receive a recommendation based on genre using HashMap: ";
+            string title;
+            getline(cin, title);
+
+            //timing code, can replicate for other timers!
+            auto start = chrono::high_resolution_clock::now();
+            helper.recommendByGenreHash(title, genreMap);
+            auto end = chrono::high_resolution_clock::now();
+            auto duration = chrono::duration_cast<chrono::microseconds>(end-start);
+            cout <<"Hash Map Execution Time: " << duration.count()<< " microseconds!"<< endl;
+            cout << "\n";
+        }
+        else if (choice == "5") {
+            cout << "Enter a show title to receive a recommendation based on network using HashMap: ";
+            string title;
+            getline(cin, title);
+            helper.recommendByNetworkHash(title, networkMap);
             cout << "\n";
         }
         else {

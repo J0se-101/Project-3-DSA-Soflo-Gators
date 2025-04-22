@@ -5,24 +5,34 @@
 #ifndef HASHMAPS_H
 #define HASHMAPS_H
 #include <string>
-#include "TVShow.h"
+#include <vector>
 using namespace std;
+
+//forward declaration to fix error
+class TVShow;
 
 
 class HashMaps {
 private:
     struct Node {
         string key; //tv show title
-        TVShow value; //actual tv show
+        TVShow* value; //actual tv show
         Node* next; //pointer to next node
+        //Constructor
+        Node(string myKey, TVShow* myValue){
+            key = myKey;
+            value = myValue;
+            next = nullptr;
+        }
     };
+    //our hash table with the buckets being a linked list
+    vector<Node*> hashTable;
+    //number of buckets for now, large to have a lower load factor since we have large data set
+    int tableSize = 30000;
+    //total elements in hashTable
+    int elementsAmount = 0;
 
-    //static const needed so compiler knows that it is constant
-    //otherwise it will give an error
-    static const int table_size = 550000;
-    //want over 500,000 for less chance of collisions
-    Node* table[table_size];
-
+    //the hash function that turns the key into our table's indexes
     int hashFunction(string key);
 
     public:
@@ -33,7 +43,7 @@ private:
     ~HashMaps();
 
     //adding tvshow to hash table
-    void insert(string key, TVShow value);
+    void insert(string key, TVShow* value);
 
     //gets TVShow
     TVShow* getShow(string key);
@@ -42,8 +52,11 @@ private:
 
     //clears values in table
     void clear();
+
+    //some helper function - for now
+    int size();
+    int bucketCount();
+    float loadFactor();
 };
-
-
 
 #endif //HASHMAPS_H

@@ -6,7 +6,9 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
+#include "hashmaps.h"
 using namespace std;
+#include <iostream>
 
 class TVShow {
 public:
@@ -18,6 +20,8 @@ public:
     float vote_average;
 
     static unordered_map<string, TVShow>  TVShowsMap; //our hash table
+    //new hash table
+    static HashMaps CustomMap;
 
     //default constructor
     TVShow();
@@ -53,13 +57,15 @@ public:
     unordered_map<string, vector<string>> networkGraphBuilder(unordered_map<string, vector<string>>& networkMap);
 
     //recommending based on genre or network
-
     void recommendByGenre(const string& inputTitle,const unordered_map<std::string, vector<string>>& genreMap);
 
     void recommendByNetwork(const string& inputTitle,const unordered_map<std::string, vector<string>>& networkMap);
 
     //load every show into the static map once
     static void loadAllShows(const string& csvFile);
+
+    void recommendByNetworkHash(const string& inputTitle,const unordered_map<string, vector<string>>& networkMap);
+    void recommendByGenreHash(const string& inputTitle,const unordered_map<string, vector<string>>& genreMap);
 
 private:
     unordered_map<string, vector<string>> graph; //graph
