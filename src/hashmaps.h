@@ -1,7 +1,3 @@
-//
-// Created by mikayla cohen on 4/21/25.
-//
-
 #ifndef HASHMAPS_H
 #define HASHMAPS_H
 #include <string>

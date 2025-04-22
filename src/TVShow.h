@@ -7,6 +7,7 @@
 #include <vector>
 #include <unordered_map>
 #include "hashmaps.h"
+#include "graph.h"
 using namespace std;
 #include <iostream>
 
@@ -56,14 +57,14 @@ public:
     unordered_map<string, vector<string>> genreGraphBuilder(unordered_map<string, vector<string>>& genreMap);
     unordered_map<string, vector<string>> networkGraphBuilder(unordered_map<string, vector<string>>& networkMap);
 
-    //recommending based on genre or network
-    void recommendByGenre(const string& inputTitle,const unordered_map<std::string, vector<string>>& genreMap);
-
-    void recommendByNetwork(const string& inputTitle,const unordered_map<std::string, vector<string>>& networkMap);
+    //recommending based on genre or network (graph)
+    void recommendByGenreGraph(const string& inputTitle, const Graph& g);
+    void recommendByNetworkGraph(const string& inputTitle, const Graph& g);
 
     //load every show into the static map once
     static void loadAllShows(const string& csvFile);
 
+    //recommending based on genre or network (Hash-map)
     void recommendByNetworkHash(const string& inputTitle,const unordered_map<string, vector<string>>& networkMap);
     void recommendByGenreHash(const string& inputTitle,const unordered_map<string, vector<string>>& genreMap);
 

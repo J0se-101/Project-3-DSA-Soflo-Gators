@@ -1,6 +1,3 @@
-//
-// Created by mikayla cohen on 4/21/25.
-//
 
 #include "hashmaps.h"
 #include "TVShow.h"

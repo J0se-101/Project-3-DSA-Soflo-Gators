@@ -467,110 +467,72 @@ void TVShow::recommendByNetworkHash(const string& inputTitle,const unordered_map
     }
 }
 
-void TVShow::recommendByGenre(const string& inputTitle,const unordered_map<string, vector<string>>& genreMap) {
+void TVShow::recommendByGenreGraph(const string& inputTitle,const Graph& g) {
     // Normalize lookup key
     string key = trim(inputTitle);
-    bool printed = false;
     transform(key.begin(), key.end(), key.begin(), ::tolower);
 
-    // Ensure the show exists
-    auto itShow = TVShowsMap.find(key);
-    if (itShow == TVShowsMap.end()) {
+    // Ensure the show exists in the graph
+    if (!g.hasShow(key)) {
         cout << "No titles match :(\n";
         return;
     }
 
-    // Split its genres into individual categories
-    vector<string> categories = splitstring(itShow->second.genres, ',');
-    unordered_set<string> recs;
+    // Ask the graph for all neighbors (other shows sharing any genre)
+    auto recs = g.getNeighbors(key);
 
-    // For each genre bucket, collect other shows
-    for (auto& genre : categories) {
-        auto itBucket = genreMap.find(genre);
-        if (itBucket == genreMap.end()) continue;
-        for (auto& other : itBucket->second) {
-            if (other != key) recs.insert(other);
+    // Randomize
+    random_device rd;
+    mt19937 gen(rd());
+    shuffle(recs.begin(), recs.end(), gen);
+
+    // Print up to 10, filtering by your vote criteria
+    int count = 0;
+    for (auto& title : recs) {
+        TVShow* rec = CustomMap.getShow(title);
+        if (rec && rec->vote_count >= 500 && rec->vote_average >= 6.0) {
+            cout << ++count << ". " << rec->name << "\n";
+            if (count == 10) break;
         }
     }
-
-    // Print recommendations
-    if (recs.empty()) {
+    if (count == 0) {
         cout << "No recommendations available.\n";
-    }
-    //limiting to only 10 random recommendations
-    //Citation: Geeks for Geeks
-    else {
-        vector<string> finalRecs(recs.begin(),recs.end());
-        random_device randomValue;
-        mt19937 g(randomValue());
-        shuffle(finalRecs.begin(),finalRecs.end(),g);
-        int count = 0;
-        for (auto& title : finalRecs) {
-            //limits to 10 recommendations outputted, makes show object to check rating
-            //only provides shows with >=500 votes and >= 6.0 avg. rating
-            auto& tvShow = TVShowsMap[title];
-            if(tvShow.vote_count>=500 && tvShow.vote_average>=6.0){
-                if(count++==10) break;
-                cout << count << ". " << tvShow.name << "\n";
-                printed = true;
-            }
-        }
-    }
-    if (!printed){
-        cout << "No recommendations available." << endl;
     }
 }
 
-void TVShow::recommendByNetwork(const string& inputTitle,const unordered_map<string, vector<string>>& networkMap) {
+void TVShow::recommendByNetworkGraph(
+    const string& inputTitle,
+    const Graph& g
+) {
     // Normalize lookup key
     string key = trim(inputTitle);
-    bool printed = false;
     transform(key.begin(), key.end(), key.begin(), ::tolower);
-    // Ensure the show exists
-    auto itShow = TVShowsMap.find(key);
-    if (itShow == TVShowsMap.end()) {
+
+    // Ensure the show exists in the graph
+    if (!g.hasShow(key)) {
         cout << "No titles match :(\n";
         return;
     }
 
-    // Split its networks into individual categories
-    vector<string> categories = splitstring(itShow->second.networks, ',');
-    unordered_set<string> recs;
+    // Ask the graph for all neighbors (other shows sharing any network)
+    auto recs = g.getNeighbors(key);
 
-    // For each network bucket, collect other shows
-    for (auto& network : categories) {
-        auto itBucket = networkMap.find(network);
-        if (itBucket == networkMap.end()) continue;
-        for (auto& other : itBucket->second) {
-            if (other != key) recs.insert(other);
+    // Randomize
+    random_device rd;
+    mt19937 gen(rd());
+    shuffle(recs.begin(), recs.end(), gen);
+
+    // Print up to 10, filtering by your vote criteria
+    int count = 0;
+    for (auto& title : recs) {
+        TVShow* rec = CustomMap.getShow(title);
+        if (rec && rec->vote_count >= 500 && rec->vote_average >= 6.0) {
+            cout << ++count << ". " << rec->name << "\n";
+            if (count == 10) break;
         }
     }
-
-    // Print recommendations
-    if (recs.empty()) {
+    if (count == 0) {
         cout << "No recommendations available.\n";
-    }
-        //limiting to only 10 random recommendations
-        //Citation: Geeks for Geeks
-    else {
-        vector<string> finalRecs(recs.begin(),recs.end());
-        random_device randomValue;
-        mt19937 g(randomValue());
-        shuffle(finalRecs.begin(),finalRecs.end(),g);
-        int count = 0;
-        for (auto& title : finalRecs) {
-            //limits to 10 recommendations outputted, makes show object to check rating
-            //only provides shows with >=500 votes and >= 6.0 avg. rating
-            auto& tvShow = TVShowsMap[title];
-            if(tvShow.vote_count>=500 && tvShow.vote_average>=6.0){
-                if(count++==10) break;
-                cout << count << ". " << tvShow.name << "\n";
-                printed = true;
-            }
-        }
-    }
-    if (!printed){
-        cout << "No recommendations available." << endl;
     }
 }
 
@@ -660,6 +622,31 @@ int main() {
     TVShow helper;
     auto genreMap    = helper.populateGenres(TVShow::TVShowsMap);
     auto networkMap  = helper.populateNetworks(TVShow::TVShowsMap);
+
+    //Build graph‐based buckets
+    int totalShows = TVShow::TVShowsMap.size();
+    Graph genreGraph(totalShows), networkGraph(totalShows);
+
+    // Add every show as a vertex
+    for (auto &entry : TVShow::TVShowsMap) {
+        const string &titleKey = entry.first;
+        genreGraph.addShow(titleKey);
+        networkGraph.addShow(titleKey);
+    }
+
+    //Bucket entries for genres
+    for (auto &b : genreMap) {
+        for (auto &titleKey : b.second) {
+            genreGraph.addBucketEntry(b.first, titleKey);
+        }
+    }
+    //Bucket entries for networks
+    for (auto &b : networkMap) {
+        for (auto &titleKey : b.second) {
+            networkGraph.addBucketEntry(b.first, titleKey);
+        }
+    }
+
     // Menu loop
 
     cout << "DSA Project 3: Soflo Gators!\n\n"
@@ -690,24 +677,31 @@ int main() {
             cout << "\n";
         }
         else if (choice == "2") {
-            cout << "Enter a show title to receive a recommendation based on genre: ";
+            cout << "Enter a show title to receive a recommendation based on genre using Graph: ";
             string title;
             getline(cin, title);
 
             //timing code
             auto start = chrono::high_resolution_clock::now();
-            helper.recommendByGenre(title, genreMap);
+            helper.recommendByGenreGraph(title, genreGraph);
             auto end = chrono::high_resolution_clock::now();
             auto duration = chrono::duration_cast<chrono::microseconds>(end-start);
-            cout <<"LIBRARY unordered_map Execution Time: " << duration.count()<< " microseconds!"<< endl;
+            cout <<"Execution Time: " << duration.count()<< " microseconds!"<< endl;
             cout << "\n";
             cout << "\n";
         }
         else if (choice == "3") {
-            cout << "Enter a show title to receive a recommendation based on network: ";
+            cout << "Enter a show title to receive a recommendation based on network using Graph: ";
             string title;
             getline(cin, title);
-            helper.recommendByNetwork(title, networkMap);
+
+            //timing code
+            auto start = chrono::high_resolution_clock::now();
+            helper.recommendByNetworkGraph(title, networkGraph);
+            auto end = chrono::high_resolution_clock::now();
+            auto duration = chrono::duration_cast<chrono::microseconds>(end-start);
+            cout <<"Execution Time: " << duration.count()<< " microseconds!"<< endl;
+            cout << "\n";
             cout << "\n";
         }
         else if (choice == "4") {

@@ -1,43 +1,48 @@
-//
-// Created by mikayla cohen on 4/21/25.
-//
-
 #ifndef GRAPH_H
 #define GRAPH_H
 #include <string>
+#include <vector>
 using namespace std;
 
 
 class Graph {
+
 private:
-    struct Edge {
-        string connectedShow;
-        Edge* next;
-    };
 
     struct Vertex {
         string title;
-        Edge* connections;
     };
 
-    Vertex* vertices;
-    int maxShows;
-    int showCount;
+    struct Bucket {
+        string key;
+        vector<int> shows;  // indices of shows in this bucket
+    };
 
-    int findVertex(string title);
+    vector<Vertex> vertices;
+    vector<Bucket> buckets;
+    int maxShows;
+
+    // Find the index of a vertex by title, or -1 if not found
+    int findVertex(const string& title) const;
+
+    void clear();
 
     public:
     ~Graph();
-    Graph(int maxShows);
-    void addShow(string title);
-    //links two tv shows
-    void addConnection(string showOne, string showTwo);
-    //get edges for the show
-    Edge* findEdge(string title);
-    bool findShow(string title);
-    void clear();
-};
+    explicit Graph(int maxShows);
 
+    // Add a vertex for a show title (no duplicates)
+    void addShow(const string& title);
+
+    void addBucketEntry(const string& featureKey, const string& title);
+
+
+    // Check if a show exists in the graph
+    bool hasShow(const string& title) const;
+
+    vector<string> getNeighbors(const string& title) const;
+
+};
 
 
 #endif //GRAPH_H
