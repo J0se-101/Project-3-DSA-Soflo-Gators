@@ -64,7 +64,7 @@ int main() {
             helper.recommendByGenreGraph(title, genreGraph);
             auto end = chrono::high_resolution_clock::now();
             auto duration = chrono::duration_cast<chrono::microseconds>(end-start);
-            cout <<"Graphs for Genres Execution Time: " << duration.count()<< " microseconds!"<< endl;
+            cout <<"Graph for Genres Execution Time: " << duration.count()<< " microseconds!"<< endl;
             cout << "\n";
             cout << "\n";
         }
