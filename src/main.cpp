@@ -2,6 +2,8 @@ using namespace std;
 #include "graph.h"
 #include "hashmaps.h"
 #include "TVShow.h"
+#include <chrono>
+#include <algorithm>
 
 int main() {
     //Load and parse the CSV once
