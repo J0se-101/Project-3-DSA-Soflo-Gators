@@ -12,16 +12,26 @@ int main() {
     auto genreMap    = helper.populateGenres(TVShow::TVShowsMap);
     auto networkMap  = helper.populateNetworks(TVShow::TVShowsMap);
 
+    //copying our genre and networks into vectors
     vector<pair<string, vector<string>>> genreList (genreMap.begin(), genreMap.end());
     vector <pair<string, vector<string>>> networkList (networkMap.begin(), networkMap.end());
+
+    //gather the keys (titles) into a vector
     vector<string> titles;
+    //reserve (citation: cplusplus) needed for optimization
     titles.reserve(TVShow::TVShowsMap.size());
     for (auto tvShow: TVShow::TVShowsMap) {
         titles.push_back(tvShow.first);
+        //pushing back show title
     }
+
+    //sort titles alphabetically
     sort(titles.begin(), titles.end());
+    //create graph objects for genres and network
     Graph genreGraph(titles);
     Graph networkGraph(titles);
+
+    //build buckets!
     genreGraph.buildBuckets(genreList);
     networkGraph.buildBuckets(networkList);
 
