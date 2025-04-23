@@ -1,4 +1,8 @@
 <H1> COP3530 - Project 3 </h1>
+Instructions to Run the File:
+- It runs locally in your terminal, so just press the run button in the IDE.
+- The data may take a little longer to process because of our large dataset, so you may have to wait a few seconds for output in the terminal.
+
 This is the template for Project 3 repositories. It includes all the assignment instructions and documentation to help you use GitHub.
 
 <h2> Table of Contents </h2>
