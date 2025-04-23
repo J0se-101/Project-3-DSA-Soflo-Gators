@@ -64,7 +64,7 @@ int main() {
             helper.recommendByGenreGraph(title, genreGraph);
             auto end = chrono::high_resolution_clock::now();
             auto duration = chrono::duration_cast<chrono::microseconds>(end-start);
-            cout <<"Execution Time: " << duration.count()<< " microseconds!"<< endl;
+            cout <<"Graphs for Genres Execution Time: " << duration.count()<< " microseconds!"<< endl;
             cout << "\n";
             cout << "\n";
         }
@@ -78,7 +78,7 @@ int main() {
             helper.recommendByNetworkGraph(title, networkGraph);
             auto end = chrono::high_resolution_clock::now();
             auto duration = chrono::duration_cast<chrono::microseconds>(end-start);
-            cout <<"Execution Time: " << duration.count()<< " microseconds!"<< endl;
+            cout <<"Graph for Networks Execution Time: " << duration.count()<< " microseconds!"<< endl;
             cout << "\n";
             cout << "\n";
         }
@@ -92,14 +92,18 @@ int main() {
             helper.recommendByGenreHash(title, genreMap);
             auto end = chrono::high_resolution_clock::now();
             auto duration = chrono::duration_cast<chrono::microseconds>(end-start);
-            cout <<"Hash Map Execution Time: " << duration.count()<< " microseconds!"<< endl;
+            cout <<"Hash Map for Genres Execution Time: " << duration.count()<< " microseconds!"<< endl;
             cout << "\n";
         }
         else if (choice == "5") {
             cout << "Enter a show title to receive a recommendation based on network using HashMap: ";
             string title;
             getline(cin, title);
+            auto start = chrono::high_resolution_clock::now();
             helper.recommendByNetworkHash(title, networkMap);
+            auto end = chrono::high_resolution_clock::now();
+            auto duration = chrono::duration_cast<chrono::microseconds>(end-start);
+            cout <<"Hash Map for Networks Execution Time: " << duration.count()<< " microseconds!"<< endl;
             cout << "\n";
         }
         else {
