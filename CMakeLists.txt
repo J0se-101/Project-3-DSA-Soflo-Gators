@@ -13,4 +13,5 @@ add_executable(Project_3_DSA_Soflo_Gators
         src/hashmaps.h
         src/graph.cpp
         src/graph.h
-        src/graph.h)
+        src/graph.h
+        src/main.cpp)

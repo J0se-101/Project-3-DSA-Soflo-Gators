@@ -44,15 +44,9 @@ private:
     //gets TVShow
     TVShow* getShow(string key);
 
-    bool checkifTitleExists(string key);
 
     //clears values in table
     void clear();
-
-    //some helper function - for now
-    int size();
-    int bucketCount();
-    float loadFactor();
 };
 
 #endif //HASHMAPS_H

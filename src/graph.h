@@ -20,7 +20,7 @@ private:
 
     vector<Vertex> vertices;
     vector<Bucket> buckets;
-    int maxShows;
+    // int maxShows;
 
     // Find the index of a vertex by title, or -1 if not found
     int findVertex(const string& title) const;
@@ -28,14 +28,11 @@ private:
     void clear();
 
     public:
+
+    explicit Graph(const vector<string>& titles);
     ~Graph();
-    explicit Graph(int maxShows);
 
-    // Add a vertex for a show title (no duplicates)
-    void addShow(const string& title);
-
-    void addBucketEntry(const string& featureKey, const string& title);
-
+    void buildBuckets (vector<pair<string, vector<string>>> &graph);
 
     // Check if a show exists in the graph
     bool hasShow(const string& title) const;

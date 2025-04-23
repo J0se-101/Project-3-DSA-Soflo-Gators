@@ -50,33 +50,8 @@ void TVShow::print() {
     cout << "\n";
 }
 
-//Old function to check for a match (didn't do exact match so if you typed "game", game of thrones appeared)
-//Maybe can use for the genre matchings!
-bool TVShow::checkifMatch(std::string userSearch) {
-    //searching for the name of show
-    //lower case for sensitivity purposes
-    //citation: geeksforgeeks
-    transform(userSearch.begin(), userSearch.end(), userSearch.begin(), ::tolower);
-    transform(name.begin(), name.end(), name.begin(), ::tolower);
-    if (name.find(userSearch) != std::string::npos) {
-        return true;
-    }
-    return false;
-}
 
-//Not used anymore, we used this before we had the hash map
-bool TVShow::checkExactMatch(string trimmedSearch, bool& showFound) {
-    //converting title to lowercase so case won't matter for comparison
-    string lowerCaseTitle = name; //name from class
-    transform(lowerCaseTitle.begin(),lowerCaseTitle.end(),lowerCaseTitle.begin(),::tolower);
-    //does an exact match with lowerCaseTitle and the user input so ONLY full titles provide a match
-    //TVShow show(userInput, genres, creators);
-    if(lowerCaseTitle == trimmedSearch){
-        print();
-        showFound = true;
-    }
-    return showFound;
-}
+
 
 /* function purpose: so user can input their search multiple ways without
  a whitespace changing the result */
@@ -149,29 +124,6 @@ vector <string> TVShow::readRow(istream& input) {
     return columns; //columns from the row that was read
 }
 
-//gets column information
-string TVShow::column(vector<string> row, int colNum) {
-    if (colNum >= 0 && colNum < row.size()) {
-        if (!row[colNum].empty()) {
-            return row[colNum]; //if it is not empty & valid
-        }
-    }
-    return "No information available.";
-}
-
-//accessing wanted columns, not all the ones in csv
-vector<string> TVShow::filterCol (vector<string> row, vector<int> index) {
-    vector<string> columns;
-    for (int i = 0; i < index.size(); i++) {
-        if (i >= 0 && i < row.size()) {
-            columns.push_back(row[i]);
-        }
-        else {
-            columns.push_back("no info available");
-        }
-    }
-    return columns;
-}
 
 //finding show, printing show name, genre, and who it was created by
 void TVShow::findShow(string csvFile, string userinput) {
@@ -270,57 +222,6 @@ vector<string> TVShow::splitstring(string s, char delimiter) {
     }
     return splitStrings;
 }
-
-unordered_map<string, vector<string>> TVShow::genreGraphBuilder(unordered_map<string, vector<string>> &genreMap) {
-    unordered_map<string, vector<string>> genreGraph;
-    //graph
-    //looping through genres
-    for (auto genreIter = genreMap.begin(); genreIter != genreMap.end(); genreIter++) {
-        //value is shows, key is genre
-        vector<string> shows = genreIter->second;
-        //connecting the shows that share same genres
-        for (int show1 = 0; show1 < shows.size(); show1++) {
-            string showOne = shows[show1];
-            transform(showOne.begin(), showOne.end(), showOne.begin(), ::tolower);
-            for (int show2 = 0; show2 < shows.size(); show2++) {
-                //this is to prevent shows from linking to themselves
-                if (show1 != show2) {
-                    //if the show isn't the same, then add an edge!
-                    string showTwo = shows[show2];
-                    transform(showTwo.begin(), showTwo.end(), showTwo.begin(), ::tolower);
-                    genreGraph[showOne].push_back(showTwo);
-                    genreGraph[showTwo].push_back(showOne);
-                }
-            }
-        }
-    }
-    return genreGraph;
-}
-
-unordered_map<string, vector<string>> TVShow::networkGraphBuilder(unordered_map<string, vector<string>> &networkMap) {
-    unordered_map<string, vector<string>> networkGraph;
-    //looping through networks
-    for (auto networkIter = networkMap.begin(); networkIter != networkMap.end(); networkIter++) {
-        vector<string> shows = networkIter->second;
-        //value is shows, key is network
-        //connecting the shows that share same network
-        for (int show1 = 0; show1 < shows.size(); show1++) {
-            string showOne = shows[show1];
-            transform(showOne.begin(), showOne.end(), showOne.begin(), ::tolower);
-            for (int show2 = 0; show2 < shows.size(); show2++) {
-                //don't want a show linking to itself
-                if (show1 != show2) {
-                    //if the show isn't the same, then add an edge!
-                    string showTwo = shows[show2];
-                    transform(showTwo.begin(), showTwo.end(), showTwo.begin(), ::tolower);
-                    networkGraph[showOne].push_back(showTwo);
-                }
-            }
-        }
-    }
-    return networkGraph;
-}
-
 
 unordered_map<string, vector<string>> TVShow::populateGenres(unordered_map<string, TVShow> TVShowsMap) {
     unordered_map<string, vector<string>> similarGenres;
@@ -537,6 +438,7 @@ void TVShow::recommendByNetworkGraph(
 }
 
 void TVShow::loadAllShows(const string& csvFile) {
+    TVShowsMap.reserve(150000);
     ifstream file(csvFile, ios::binary);
     if (!file.is_open()) {
         cerr << "Error opening file " << csvFile << endl;
@@ -559,17 +461,10 @@ void TVShow::loadAllShows(const string& csvFile) {
         cerr << "CSV header missing required columns\n";
         return;
     }
-
     //reads each data row
     while (true) {
         vector<string> row = readRow(file);
         if (row.empty()) break;
-
-
-        int requiredCols = max({colName,colGenres,colCreatedBy,colNetworks,colVoteCount,colVoteAverage});
-        if(row.size()<=requiredCols){
-            continue;
-        }
 
         // trim & extract
         auto t = trim(row[colName]);
@@ -578,17 +473,6 @@ void TVShow::loadAllShows(const string& csvFile) {
         auto n = trim(row[colNetworks]);
         int vc = stoi(trim(row[colVoteCount]));
         float va = stod(trim(row[colVoteAverage]));
-        //used for debugging, keep until finally done in case we run into issues
-        /*int vc=0;
-        float va=0.0;
-        string voteCountStr = trim(row[colVoteCount]);
-        string voteAvgStr = trim(row[colVoteAverage]);
-        if(!voteCountStr.empty()){
-            vc=stoi(voteCountStr);
-        }
-        if(!voteAvgStr.empty()){
-            va=stof(voteAvgStr);
-        }*/
 
         //consume multi‑part creators if any
         while (row.size() > colCreatedBy+1) {
@@ -612,121 +496,4 @@ void TVShow::loadAllShows(const string& csvFile) {
 
     file.close();
     cout << "Loaded " << TVShowsMap.size() << " shows <3.\n" << endl;
-}
-
-int main() {
-    //Load and parse the CSV once
-    TVShow::loadAllShows("../src/TMDB_tv_dataset_v3.csv");
-
-    //Build both graphs once at startup
-    TVShow helper;
-    auto genreMap    = helper.populateGenres(TVShow::TVShowsMap);
-    auto networkMap  = helper.populateNetworks(TVShow::TVShowsMap);
-
-    //Build graph‐based buckets
-    int totalShows = TVShow::TVShowsMap.size();
-    Graph genreGraph(totalShows), networkGraph(totalShows);
-
-    // Add every show as a vertex
-    for (auto &entry : TVShow::TVShowsMap) {
-        const string &titleKey = entry.first;
-        genreGraph.addShow(titleKey);
-        networkGraph.addShow(titleKey);
-    }
-
-    //Bucket entries for genres
-    for (auto &b : genreMap) {
-        for (auto &titleKey : b.second) {
-            genreGraph.addBucketEntry(b.first, titleKey);
-        }
-    }
-    //Bucket entries for networks
-    for (auto &b : networkMap) {
-        for (auto &titleKey : b.second) {
-            networkGraph.addBucketEntry(b.first, titleKey);
-        }
-    }
-
-    // Menu loop
-
-    cout << "DSA Project 3: Soflo Gators!\n\n"
-         << "Type '1' to search for a TV show.\n"
-         << "Type '2' to receive a recommendation based on a genre.\n"
-         << "Type '3' to receive a recommendation based on network.\n"
-         << "Type '4' to receive a recommendation based on genre using HashMap.\n"
-         << "Type '5' to receive a recommendation based on network using HashMap.\n"
-         << "Type 'exit' to quit.\n\n";
-
-    string choice;
-
-    while(true){
-
-        cout << "Please input here: ";
-        getline(cin, choice);
-        choice = TVShow::trim(choice);
-        transform(choice.begin(), choice.end(), choice.begin(), ::tolower);
-
-        if(choice == "exit"){
-            break;
-        }
-        else if (choice == "1") {
-            cout << "Search for show title: ";
-            string title;
-            getline(cin, title);
-            helper.findShow("../src/TMDB_tv_dataset_v3.csv", title);
-            cout << "\n";
-        }
-        else if (choice == "2") {
-            cout << "Enter a show title to receive a recommendation based on genre using Graph: ";
-            string title;
-            getline(cin, title);
-
-            //timing code
-            auto start = chrono::high_resolution_clock::now();
-            helper.recommendByGenreGraph(title, genreGraph);
-            auto end = chrono::high_resolution_clock::now();
-            auto duration = chrono::duration_cast<chrono::microseconds>(end-start);
-            cout <<"Execution Time: " << duration.count()<< " microseconds!"<< endl;
-            cout << "\n";
-            cout << "\n";
-        }
-        else if (choice == "3") {
-            cout << "Enter a show title to receive a recommendation based on network using Graph: ";
-            string title;
-            getline(cin, title);
-
-            //timing code
-            auto start = chrono::high_resolution_clock::now();
-            helper.recommendByNetworkGraph(title, networkGraph);
-            auto end = chrono::high_resolution_clock::now();
-            auto duration = chrono::duration_cast<chrono::microseconds>(end-start);
-            cout <<"Execution Time: " << duration.count()<< " microseconds!"<< endl;
-            cout << "\n";
-            cout << "\n";
-        }
-        else if (choice == "4") {
-            cout << "Enter a show title to receive a recommendation based on genre using HashMap: ";
-            string title;
-            getline(cin, title);
-
-            //timing code, can replicate for other timers!
-            auto start = chrono::high_resolution_clock::now();
-            helper.recommendByGenreHash(title, genreMap);
-            auto end = chrono::high_resolution_clock::now();
-            auto duration = chrono::duration_cast<chrono::microseconds>(end-start);
-            cout <<"Hash Map Execution Time: " << duration.count()<< " microseconds!"<< endl;
-            cout << "\n";
-        }
-        else if (choice == "5") {
-            cout << "Enter a show title to receive a recommendation based on network using HashMap: ";
-            string title;
-            getline(cin, title);
-            helper.recommendByNetworkHash(title, networkMap);
-            cout << "\n";
-        }
-        else {
-            cout << "Invalid input.\n\n";
-        }
-    }
-    return 0;
 }

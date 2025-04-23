@@ -56,10 +56,6 @@ TVShow * HashMaps::getShow(string key) {
     return nullptr; //if it wasn't found
 }
 
-bool HashMaps::checkifTitleExists(string key) {
-    return getShow(key)!=nullptr;
-}
-
 void HashMaps::clear() {
     for (int i = 0; i < tableSize; i++) {
        Node* currentNode = hashTable[i];
@@ -72,16 +68,4 @@ void HashMaps::clear() {
        hashTable[i]=nullptr;
     }
     elementsAmount =0;
-}
-
-int HashMaps::size(){
-    return elementsAmount;
-}
-
-int HashMaps::bucketCount(){
-    return tableSize;
-}
-
-float HashMaps::loadFactor() {
-    return static_cast<float>(elementsAmount)/tableSize;
 }

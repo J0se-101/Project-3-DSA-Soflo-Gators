@@ -1,49 +1,43 @@
 #include "graph.h"
 #include <algorithm>
 
-Graph::Graph(int maxShows)
-    : maxShows(maxShows)
-{
-    vertices.reserve(maxShows);
-}
-
-int Graph::findVertex(const string& title) const {
-    for (int i = 0; i < vertices.size(); i++) {
-        //looping through the shows
-        if (vertices[i].title == title) {
-            /*if that show matches title
-            return the index that its at */
-            return i;
+Graph::Graph(const vector<string> &titles) {
+    { vertices.reserve(titles.size());
+        for (const string title : titles) {
+            vertices.push_back({title});
         }
     }
-    return -1; //if not found
 }
+
+
+int Graph::findVertex(const string& title) const {
+    int left = 0;
+    int right = int(vertices.size() - 1);
+
+    while (left <= right) {
+        int mid = left + (right - left) / 2;
+        string midpointTitle = vertices[mid].title;
+
+        if (midpointTitle == title) {
+            return mid;
+        }
+
+        if (midpointTitle < title) {
+            left = mid + 1;
+        }
+
+        else {
+            right = mid - 1;
+        }
+    }
+    return -1;
+}
+
 
 Graph::~Graph() {
     clear();
 }
 
-void Graph::addShow(const string& title) {
-    if (vertices.size() >= maxShows) return;
-    if (findVertex(title) == -1) {
-        // create a new vertex with no neighbors
-        vertices.push_back({title});
-    }
-}
-
-void Graph::addBucketEntry(const string& featureKey, const string& title) {
-    int index = findVertex(title);
-    if (index < 0) return;
-    // find or create bucket
-    for (auto &bucket : buckets) {
-        if (bucket.key == featureKey) {
-            bucket.shows.push_back(index);
-            return;
-        }
-    }
-    // new bucket
-    buckets.push_back({featureKey, {index}});
-}
 
 bool Graph::hasShow(const string& title) const {
     return findVertex(title) != -1;
@@ -81,6 +75,36 @@ vector<string> Graph::getNeighbors(const string& title) const {
 void Graph::clear() {
     vertices.clear();
     buckets.clear();
+}
+
+
+void Graph::buildBuckets(vector<pair<string, vector<string>>> &graph) {
+    //clear buckets and reserve space
+    buckets.clear();
+    //citation: reserve() --> cplusplus
+    buckets.reserve(graph.size());
+    for (size_t i = 0; i < graph.size(); ++i) {
+        string titleName = graph[i].first;
+        vector<string> showTitles = graph[i].second;
+
+        //make a new bucket
+        Bucket bucketbuilding;
+        bucketbuilding.key = titleName;
+
+        //making sure that theres enough room to push back
+        bucketbuilding.shows.reserve(showTitles.size());
+        for (int j = 0; j < showTitles.size(); ++j) {
+            const string showTitle = showTitles[j];
+            //find index of the jth title
+            int index = findVertex(showTitle);
+            //if found, record in bucket
+            if (index >= 0) {
+                bucketbuilding.shows.push_back(index);
+            }
+        }
+        //add bucket to graph
+        buckets.push_back(move(bucketbuilding));
+    }
 }
 
 
